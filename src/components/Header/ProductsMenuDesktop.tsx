@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Link from "next/link";
 
 import { getSlugUrl } from "@/src/lib/utils";
@@ -44,7 +45,7 @@ function toMenuItems(cmsItems: CmsProductNavItem[] | null | undefined): MenuItem
   }));
 }
 
-export default function ProductsMenuDesktop({
+function ProductsMenuDesktopComponent({
   buttonClassName = "",
   layout = "light",
   menuTitle,
@@ -130,3 +131,7 @@ export default function ProductsMenuDesktop({
     </li>
   );
 }
+
+const ProductsMenuDesktop = memo(ProductsMenuDesktopComponent);
+ProductsMenuDesktop.displayName = "ProductsMenuDesktop";
+export default ProductsMenuDesktop;

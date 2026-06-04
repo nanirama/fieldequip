@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 
@@ -15,11 +16,15 @@ const BaseLayout = ({
 }) => {
   return (
     <>
-      {/* <Header layout={layout} /> */}
-      <main id="main-content" className="min-h-dvh flex-1">
-        {/* {children} */}
-      </main>
-      <Footer />
+      <Suspense fallback={null}>
+        <Header layout={layout} />
+      </Suspense>
+      {/* <main id="main-content" className="min-h-dvh flex-1">
+        {children}
+      </main> */}
+      <Suspense fallback={null}>
+        <Footer />
+      </Suspense>
     </>
   );
 };

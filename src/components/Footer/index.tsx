@@ -3,26 +3,34 @@ import { cacheTag, cacheLife } from "next/cache";
 import Link from "next/link";
 
 import { client } from "@/src/sanity/lib/client";
-import { settingsQuery } from "@/src/sanity/lib/queries";
+import { footerQuery } from "@/src/sanity/lib/queries";
 import { getSlugUrl } from "@/src/lib/utils";
-import type { CmsSocialLink, SettingsMenuData } from "@/src/components/Header/menu-types";
+import type { CmsSocialLink } from "@/src/components/Header/menu-types";
+
+// Only the fields Footer actually renders — avoids pulling header mega-menu
+// data (productNav, industriesNav with images, companyNav, resourcesNav).
+type FooterData = {
+  footerNote?: string;
+  copyright?: string;
+  socialLinks?: { platform: CmsSocialLink["platform"]; url: string }[];
+  footerMenu?: { menuTitle?: string; navItems?: { title?: string; _type?: string; slug?: string }[] }[];
+  legalNav?: { title?: string; _type?: string; slug?: string }[];
+};
 
 // ── Layer 1: Remote Data Cache ────────────────────────────────────────────────
-// Sanity footer data (links, social, copyright) is shared across all users.
-// "use cache: remote" persists it in the Data Cache until the webhook fires
-// revalidateTag('settings') to invalidate it.
-async function fetchFooterSettings(): Promise<SettingsMenuData> {
+// Fetches only the 5 footer-specific fields. "use cache: remote" persists the
+// result in Next.js Data Cache (shared across all users). Invalidated when the
+// Sanity webhook fires revalidateTag('settings').
+async function fetchFooterData(): Promise<FooterData> {
   'use cache: remote';
   cacheTag('settings');
   cacheLife({ revalidate: 3600 });
-  const data = await client.fetch<SettingsMenuData | null>(settingsQuery);
-  return data ?? ({} as SettingsMenuData);
+  return await client.fetch<FooterData | null>(footerQuery) ?? {};
 }
 
-// React Request Memoization: deduplicates within the same render tree.
-// If Header's getHeaderSettings() is called in the same request, only one
-// Sanity Data Cache lookup happens (not two separate network calls).
-const getFooterSettings = cache(fetchFooterSettings);
+// React Request Memoization: deduplicates within the same render tree so
+// multiple renders never make more than one Data Cache lookup per request.
+const getFooterData = cache(fetchFooterData);
 
 const footerLinkClass =
   "text-sm leading-[140%] text-white transition-colors hover:text-[#13A89E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#13A89E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#234a7a]";
@@ -98,18 +106,18 @@ export default async function Footer() {
   cacheTag('settings');
   cacheLife({ revalidate: 3600 });
 
-  const settings = await getFooterSettings();
-  const footerNote = settings?.footerNote?.trim() || "";
-  const copyright = settings?.copyright?.trim() || "";
-  const socialLinks = settings?.socialLinks ?? [];
-  const navGroups = (settings?.footerMenu ?? []).map((group) => ({
+  const data = await getFooterData();
+  const footerNote = data.footerNote?.trim() || "";
+  const copyright = data.copyright?.trim() || "";
+  const socialLinks = data.socialLinks ?? [];
+  const navGroups = (data.footerMenu ?? []).map((group) => ({
     title: group.menuTitle?.trim() || "",
     items: (group.navItems ?? []).map((item) => ({
       title: item.title,
       href: item._type ? getSlugUrl(item._type, item.slug ?? undefined) : "#",
     })),
   }));
-  const legalLinks = (settings?.legalNav ?? []).map((item) => ({
+  const legalLinks = (data.legalNav ?? []).map((item) => ({
     title: item.title,
     href: item._type ? getSlugUrl(item._type, item.slug ?? undefined) : "#",
   }));

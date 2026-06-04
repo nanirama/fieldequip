@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Link from "next/link";
 
 import { getSlugUrl } from "@/src/lib/utils";
@@ -32,7 +33,7 @@ type ResourcesMenuDesktopProps = {
   items?: CmsSimpleNavItem[] | null;
 };
 
-export default function ResourcesMenuDesktop({
+function ResourcesMenuDesktopComponent({
   buttonClassName = "",
   layout = "light",
   menuTitle,
@@ -103,3 +104,7 @@ export default function ResourcesMenuDesktop({
     </li>
   );
 }
+
+const ResourcesMenuDesktop = memo(ResourcesMenuDesktopComponent);
+ResourcesMenuDesktop.displayName = "ResourcesMenuDesktop";
+export default ResourcesMenuDesktop;

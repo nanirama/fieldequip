@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -34,7 +35,7 @@ type IndustriesMenuDesktopProps = {
   industries: CmsIndustriesNavItem[];
 };
 
-export default function IndustriesMenuDesktop({
+function IndustriesMenuDesktopComponent({
   buttonClassName = "",
   layout = "light",
   menuTitle,
@@ -118,3 +119,7 @@ export default function IndustriesMenuDesktop({
     </li>
   );
 }
+
+const IndustriesMenuDesktop = memo(IndustriesMenuDesktopComponent);
+IndustriesMenuDesktop.displayName = "IndustriesMenuDesktop";
+export default IndustriesMenuDesktop;

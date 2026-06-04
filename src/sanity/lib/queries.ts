@@ -697,6 +697,79 @@ export const conversionPagesSlugsQuery = groq`
   }
 `
 
+// Minimal query for the Header — only the 4 nav sections it renders.
+// settingsQuery also pulls footer fields (footerNote, socialLinks, copyright,
+// footerMenu, legalNav) which the header never uses. This query skips them.
+export const headerQuery = groq`
+  *[_type == "settings"][0]{
+    productsTitle,
+    productsDescription,
+    "productNav": productNav[]{
+      title,
+      "_type": link->_type,
+      "slug": link->slug.current,
+      "featuresNav": featuresNav[]{
+        title,
+        "_type": link->_type,
+        "slug": link->slug.current
+      }
+    },
+    industriesTitle,
+    industriesDescription,
+    "industriesNav": industriesNav[]{
+      title,
+      description,
+      "_type": link->_type,
+      "slug": link->slug.current,
+      image
+    },
+    companyTitle,
+    companyDescription,
+    "companyNav": companyNav[]{
+      title,
+      description,
+      "_type": link->_type,
+      "slug": link->slug.current
+    },
+    resourcesTitle,
+    resourcesDescription,
+    "resourcesNav": resourcesNav[]{
+      title,
+      description,
+      "_type": link->_type,
+      "slug": link->slug.current
+    }
+  }
+`
+
+// Minimal query for the Footer — only the 5 fields it actually renders.
+// Using settingsQuery here would pull in the full header mega-menu data
+// (productNav, industriesNav with images, companyNav, resourcesNav) which
+// the footer never uses, adding unnecessary payload and parse time.
+export const footerQuery = groq`
+  *[_type == "settings"][0]{
+    footerNote,
+    "socialLinks": socialLinks[]{
+      platform,
+      url
+    },
+    copyright,
+    "footerMenu": footerMenu[]{
+      menuTitle,
+      "navItems": navItems[]{
+        title,
+        "_type": link->_type,
+        "slug": link->slug.current
+      }
+    },
+    "legalNav": legalNav[]{
+      title,
+      "_type": link->_type,
+      "slug": link->slug.current
+    }
+  }
+`
+
 export const settingsQuery = groq`
   *[_type == "settings"][0]{
     productsTitle,

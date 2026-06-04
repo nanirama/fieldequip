@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { cacheTag, cacheLife } from 'next/cache';
 import { client } from "@/src/sanity/lib/client";
-import { settingsQuery } from "@/src/sanity/lib/queries";
+import { headerQuery } from "@/src/sanity/lib/queries";
 import HeaderClient from "./HeaderClient";
 import type { SettingsMenuData } from "./menu-types";
 
@@ -13,7 +13,7 @@ async function fetchHeaderSettings(): Promise<SettingsMenuData> {
   'use cache: remote';
   cacheTag('settings');
   cacheLife({ revalidate: 3600 });
-  const data = await client.fetch<SettingsMenuData | null>(settingsQuery);
+  const data = await client.fetch<SettingsMenuData | null>(headerQuery);
   return data ?? ({} as SettingsMenuData);
 }
 
