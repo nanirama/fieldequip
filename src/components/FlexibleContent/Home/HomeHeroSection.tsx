@@ -166,7 +166,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
 
   return (
     <section
-      className="relative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
+      className="min-h-screenrelative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
       aria-labelledby="hero-heading"
     >
       {/**
