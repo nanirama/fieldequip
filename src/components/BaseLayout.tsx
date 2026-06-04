@@ -15,7 +15,7 @@ const BaseLayout = ({
 }) => {
   return (
     <>
-      <Header layout={layout} />
+      {/* <Header layout={layout} /> */}
       <main id="main-content" className="min-h-dvh flex-1">
         {/* {children} */}
       </main>
