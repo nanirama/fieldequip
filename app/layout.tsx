@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 import { getMetadataBase } from "@/src/utils/siteUrl";
 import { OrganizationSchema } from "@/src/components/SchemaOrg";
 import { GoogleAnalytics } from "@/src/components/GoogleAnalytics";
+import HubSpotChat from "@/src/components/HubSpotChat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,11 +55,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <GoogleAnalytics />
-        <Script
-          id="hs-script-loader"
-          src="https://js.hs-scripts.com/2624857.js"
-          strategy="afterInteractive"
-        />
+        <HubSpotChat portalId="2624857" />
       </body>
     </html>
   );
