@@ -19,9 +19,9 @@ const BaseLayout = ({
       <Suspense fallback={null}>
         <Header layout={layout} />
       </Suspense>
-      {/* <main id="main-content" className="min-h-dvh flex-1">
+      <main id="main-content" className="min-h-dvh flex-1">
         {children}
-      </main> */}
+      </main>
       <Suspense fallback={null}>
         <Footer />
       </Suspense>
