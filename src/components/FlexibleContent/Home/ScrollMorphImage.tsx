@@ -354,7 +354,7 @@ const ScrollMorphImage = memo(function ScrollMorphImage({
               fetchPriority={isLCP ? "high" : "low"}
               decoding="async"
               {...blurProps}
-              className="select-none w-full sm:mt-0 -mt-10 h-auto block sm:hidden"
+              className="select-none w-full sm:mt-0  h-auto block sm:hidden"
               draggable={false}
             />
 
