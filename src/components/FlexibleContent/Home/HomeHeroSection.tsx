@@ -166,7 +166,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
 
   return (
     <section
-      className="min-h-screen relative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
+      className="relative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
       aria-labelledby="hero-heading"
     >
       {/**
@@ -275,7 +275,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
        * Only the ScrollMorphImage subtree hydrates on the client.
        * The h1/p/buttons above remain static server HTML = lower TBT.
        */}
-      <div className={`relative z-30 mx-auto w-full min-h-[${imageMaxHeight}] `}>
+      <div className="relative z-30 mx-auto w-full">
         <ScrollMorphImage
           imageUrl={imageUrl}
           imageUrlMobile={imageUrlMobile}
