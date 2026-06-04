@@ -31,9 +31,6 @@ const TAGS_BY_TYPE: Record<string, string[]> = {
   teamMember: ['page'],
 }
 
-// Force this route to run dynamically so revalidateTag works correctly
-export const dynamic = 'force-dynamic'
-
 export async function POST(req: NextRequest) {
   try {
     const { isValidSignature, body } = await parseBody<{
@@ -63,7 +60,9 @@ export async function POST(req: NextRequest) {
     }
 
     for (const tag of tags) {
-      revalidateTag(tag)
+      // Provide a second argument to satisfy the TypeScript signature
+      // (some Next.js typings expect two parameters).
+      revalidateTag(tag, undefined)
     }
 
     return NextResponse.json({ revalidated: true, tags })
