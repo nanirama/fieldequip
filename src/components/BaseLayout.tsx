@@ -13,11 +13,11 @@ const BaseLayout = async ({ children, layout = "light" }: { children: React.Reac
 
   return (
     <>
-      <Header layout={layout} settings={settings} />
+      {/* <Header layout={layout} settings={settings} /> */}
       <main id="main-content" className="min-h-dvh flex-1">
         {children}
       </main>
-      <Footer settings={settings} />
+      {/* <Footer settings={settings} /> */}
     </>
   );
 };
