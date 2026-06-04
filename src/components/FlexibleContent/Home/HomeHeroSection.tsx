@@ -84,7 +84,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
                     alt=""
                     fill
                     sizes="100vw"
-                    quality={60}
+                    quality={50}
                     loading="lazy"
                     fetchPriority="low"
                     className="object-cover object-top md:object-fill"

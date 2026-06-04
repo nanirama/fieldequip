@@ -182,7 +182,7 @@ export default function ScrollMorphImage({
                 alt={imageAlt}
                 width={MOBILE_W}
                 height={mobileH}
-                sizes="(min-width: 640px) 1px, calc(100vw - 2rem)"
+                sizes="(min-width: 640px) 1px, calc(100vw - 4rem)"
                 quality={82}
                 priority
                 {...blurProps}
