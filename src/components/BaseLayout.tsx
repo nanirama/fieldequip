@@ -1,15 +1,12 @@
-import { client } from "@/src/sanity/lib/client";
-import { settingsQuery } from "@/src/sanity/lib/queries";
-import type { SettingsMenuData } from "@/src/components/Header/menu-types";
-import Header from "./Header";
-import Footer from "./Footer";
+// import { client } from "@/src/sanity/lib/client";
+// import { settingsQuery } from "@/src/sanity/lib/queries";
+// import type { SettingsMenuData } from "@/src/components/Header/menu-types";
+// import Header from "./Header";
+// import Footer from "./Footer";
 
-const BaseLayout = async ({ children, layout = "light" }: { children: React.ReactNode, layout?: "dark" | "light" }) => {
-  const settings = await client.fetch<SettingsMenuData | null>(
-    settingsQuery,
-    {},
-    { next: { revalidate: 3600, tags: ['settings'] } }
-  ) ?? {};
+const BaseLayout = ({ children, layout = "light" }: { children: React.ReactNode, layout?: "dark" | "light" }) => {
+  // Settings fetch is suspended while Header and Footer are hidden.
+  // Re-enable the imports above and restore the fetch + components below when ready.
 
   return (
     <>
