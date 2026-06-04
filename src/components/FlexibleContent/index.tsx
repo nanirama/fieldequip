@@ -158,7 +158,7 @@ type SectionComponentProps = {
 };
 
 const sectionComponents: Record<string, (props: SectionComponentProps) => ReactElement> = {
-  homeHeroSection: HomeHeroSection,
+  //homeHeroSection: HomeHeroSection,
   // homeStatsSection: HomeStatsSection,
   // homeRolesSection: HomeRoleSection,
   // homeRoleSection: HomeRoleSection,
