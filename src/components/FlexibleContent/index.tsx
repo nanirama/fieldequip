@@ -231,14 +231,16 @@ const FlexibleContent = async ({
   data,
   page
 }: FlexibleContentProps) => {
-  const caseStudyDocs = await getAllCaseStudies();
+  const hasCaseStudies = data?.sections?.some(
+    (s) => (s as FlexibleSection)?._type === 'caseStudiesSection'
+  );
+  const caseStudyDocs = hasCaseStudies ? await getAllCaseStudies() : [];
 
   const sections = await Promise.all(
     data?.sections && data?.sections?.map(async (section, index: number) => {
       const typedSection = section as FlexibleSection;
       if (!typedSection?._type) return null;
       const Section = sectionComponents[typedSection._type];
-      console.log('Section: ', typedSection._type);
       if (!Section) return null;
 
       let sectionData: FlexibleSection = typedSection;

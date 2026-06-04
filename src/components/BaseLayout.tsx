@@ -5,7 +5,11 @@ import Header from "./Header";
 import Footer from "./Footer";
 
 const BaseLayout = async ({ children, layout = "light" }: { children: React.ReactNode, layout?: "dark" | "light" }) => {
-  const settings = await client.fetch<SettingsMenuData | null>(settingsQuery) ?? {};
+  const settings = await client.fetch<SettingsMenuData | null>(
+    settingsQuery,
+    {},
+    { next: { revalidate: 3600, tags: ['settings'] } }
+  ) ?? {};
 
   return (
     <>

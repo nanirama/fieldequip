@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsProductNavItem, MenuItem } from "./menu-types";
@@ -63,7 +62,7 @@ export default function ProductsMenuDesktop({
         type="button"
         aria-haspopup="true"
         className={[
-          "inline-flex items-center gap-1 rounded-md px-2 py-2 text-sm font-medium py-6",
+          "inline-flex items-center gap-1 rounded-md px-2 py-6 text-sm font-medium",
           isDark ? "text-white" : "text-slate-800",
           "transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2",
           "focus-visible:ring-teal-500 focus-visible:ring-offset-2",
@@ -78,7 +77,7 @@ export default function ProductsMenuDesktop({
       <div
         aria-label="Products"
         className={[
-          "pointer-events-none invisible fixed left-1/2 top-[5rem] z-50 w-[calc(100vw-2rem)] max-w-screen-xl",
+          "pointer-events-none invisible fixed left-1/2 top-20 z-50 w-[calc(100vw-2rem)] max-w-7xl",
           "-translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/10",
           "opacity-0 transition duration-200 ease-out",
           "group-hover/products:pointer-events-auto group-hover/products:visible group-hover/products:opacity-100",
@@ -87,7 +86,7 @@ export default function ProductsMenuDesktop({
       >
         <div className="grid grid-cols-[230px_1fr] gap-6 items-end">
           <div className="border-r border-[#8B9DBA]/50 pr-6 h-full flex flex-col justify-end">
-            <Link href="/"><Image src="/images/tinylogo.svg" alt="logo" width={41} height={35} /></Link>
+            <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
             <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
             <p className="mt-3 text-base leading-[130%] text-[#020210]">{description}</p>
           </div>

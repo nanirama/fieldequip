@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsSimpleNavItem } from "./menu-types";
@@ -66,7 +65,7 @@ export default function CompanyMenuDesktop({
       <div
         aria-label="Company"
         className={[
-          "pointer-events-none invisible fixed left-1/2 top-[5rem] z-50 w-[calc(100vw-2rem)] max-w-screen-xl",
+          "pointer-events-none invisible fixed left-1/2 top-20 z-50 w-[calc(100vw-2rem)] max-w-7xl",
           "-translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/10",
           "opacity-0 transition duration-200 ease-out",
           "group-hover/company:pointer-events-auto group-hover/company:visible group-hover/company:opacity-100",
@@ -75,7 +74,7 @@ export default function CompanyMenuDesktop({
       >
         <div className="grid grid-cols-[250px_1fr] gap-6 items-end">
           <div className="border-r border-[#8B9DBA]/50 pr-6 h-full flex flex-col justify-end">
-            <Link href="/"><Image src="/images/tinylogo.svg" alt="logo" width={41} height={35} /></Link>
+            <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
             <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
             <p className="mt-3 text-base leading-[130%] text-[#020210]">{description}</p>
           </div>
@@ -87,7 +86,7 @@ export default function CompanyMenuDesktop({
               <li key={`${item.title}-${href}`} className="min-w-0">
                 <Link
                   href={href}
-                  className="inline-flex items-center gap-2 text-lg font-[700] leading-tight text-[#020210] transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+                  className="inline-flex items-center gap-2 text-lg font-bold leading-tight text-[#020210] transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
                 >
                   {item.title}
                   <ChevronRightIcon className="h-3 w-3 text-teal-500" />

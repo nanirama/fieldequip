@@ -66,7 +66,7 @@ export default function IndustriesMenuDesktop({
       <div
         aria-label="Industries"
         className={[
-          "pointer-events-none invisible fixed left-1/2 top-[5rem] z-50 w-[calc(100vw-2rem)] max-w-screen-xl",
+          "pointer-events-none invisible fixed left-1/2 top-20 z-50 w-[calc(100vw-2rem)] max-w-7xl",
           "-translate-x-1/2 rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/10",
           "opacity-0 transition duration-200 ease-out",
           "group-hover/industries:pointer-events-auto group-hover/industries:visible group-hover/industries:opacity-100",
@@ -75,7 +75,7 @@ export default function IndustriesMenuDesktop({
       >
         <div className="grid grid-cols-[250px_1fr] gap-6 items-end">
           <div className="border-r border-[#8B9DBA]/50 pr-6 h-full flex flex-col justify-end">
-            <Link href="/"><Image src="/images/tinylogo.svg" alt="logo" width={41} height={35} /></Link>
+            <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
             <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
             <p className="mt-3 text-base leading-[130%] text-[#020210]">{description}</p>
           </div>
@@ -97,7 +97,7 @@ export default function IndustriesMenuDesktop({
                           alt={item.title}
                           width={600}
                           height={260}
-                          className="h-[158px] w-full object-cover transition-transform duration-300 group-hover/item:scale-[1.02]"
+                          className="h-39.5 w-full object-cover transition-transform duration-300 group-hover/item:scale-[1.02]"
                         />
                       </div>
                     )}

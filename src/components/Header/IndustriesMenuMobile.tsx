@@ -91,8 +91,8 @@ function IndustriesMenuMobileComponent({ className = "", menuTitle, menuDescript
           className="max-h-dvh overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
         >
           <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <Link href="/"><Image src="/images/tinylogo.svg" alt="logo" width={41} height={35} /></Link>
+              <div>
+              <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
               <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
               <p className="mt-3 max-w-[24ch] text-[16px] leading-[130%] text-[#020210]">{description}</p>
             </div>
@@ -128,7 +128,7 @@ function IndustriesMenuMobileComponent({ className = "", menuTitle, menuDescript
                           alt={item.title}
                           width={700}
                           height={340}
-                          className="h-[130px] w-full object-cover"
+                          className="h-32.5 w-full object-cover"
                         />
                       </div>
                     )}

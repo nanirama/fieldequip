@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { memo, useCallback, useState } from "react";
-import Image from "next/image";
 
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsProductNavItem, MenuItem } from "./menu-types";
@@ -170,8 +169,8 @@ function ProductsMenuMobileComponent({ className = "", menuTitle, menuDescriptio
           className="max-h-dvh overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
         >
           <div className="mb-6 flex items-start justify-between gap-4">
-            <div>
-              <Link href="/"><Image src="/images/tinylogo.svg" alt="logo" width={41} height={35} /></Link>
+              <div>
+              <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
               <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
               <p className="mt-3 max-w-[24ch] text-[16px] leading-[1.35] text-[#020210]">{description}</p>
             </div>

@@ -3,12 +3,20 @@
 import Image from "next/image";
 import { useRef, useEffect } from "react";
 import {
-  motion,
+  LazyMotion,
+  m,
   useMotionValue,
   useTransform,
   animate,
   type AnimationPlaybackControls,
 } from "framer-motion";
+
+// Code-split Framer Motion features out of the initial bundle.
+// useMotionValue + useTransform are in the core (~15 KB) and run
+// immediately — the 3-D tilt and glow shadow work before features load.
+// Only declarative animate-prop animations (scroll nudge) need features.
+const loadFeatures = () =>
+  import("framer-motion").then((mod) => mod.domAnimation);
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PERSPECTIVE_STYLE = {
@@ -42,13 +50,13 @@ export default function ScrollMorphImage({
   // Single source of truth — 0 = fully tilted, 1 = fully flat
   const progress = useMotionValue(0);
 
+  // All transforms derived from core MotionValues — no features required
   const rotateX       = useTransform(progress, [0, 1], [26, 0]);
   const scale         = useTransform(progress, [0, 1], [0.83, 1]);
   const translateY    = useTransform(progress, [0, 1], [52, 0]);
   const shadowOpacity = useTransform(progress, [0, 1], [0.65, 0.18]);
   const shadowBlurRaw = useTransform(progress, [0, 1], [72, 20]);
   const shadowBlur    = useTransform(shadowBlurRaw, (v) => `blur(${v}px)`);
-  const overlayOp     = useTransform(progress, [0, 1], [0.6, 0]);
   const nudgeOp       = useTransform(progress, [0, 0.3], [1, 0]);
 
   useEffect(() => {
@@ -122,121 +130,107 @@ export default function ScrollMorphImage({
   const desktopW = imageWidth ?? 1200;
   const desktopH = imageHeight ?? 676;
 
-  // Mobile: intrinsic width increased to 420 to allow better srcset resolution.
-  // This yields 840px at 2× DPR which reduces perceived blurriness on modern phones.
   const MOBILE_W = 420;
   const mobileH  = Math.round((MOBILE_W / desktopW) * desktopH);
 
-  const mobileSrc  = imageUrlMobile ?? imageUrl;
-  const blurProps  = blurImageUrl
+  const mobileSrc = imageUrlMobile ?? imageUrl;
+  const blurProps = blurImageUrl
     ? { placeholder: "blur" as const, blurDataURL: blurImageUrl }
     : { placeholder: "empty" as const };
 
   return (
-    <section
-      ref={sectionRef}
-      aria-label="FieldEquip scheduler interface preview"
-      className="relative w-full mt-4"
-    >
-      <div
-        className="mx-auto w-full max-w-6xl px-4 sm:px-8"
-        style={PERSPECTIVE_STYLE}
+    <LazyMotion features={loadFeatures}>
+      <section
+        ref={sectionRef}
+        aria-label="FieldEquip scheduler interface preview"
+        className="relative w-full mt-4"
       >
-        <motion.div
-          style={{
-            rotateX,
-            scale,
-            y: translateY,
-            transformOrigin: "50% 100%",
-            willChange: "transform",
-          }}
-          className="relative w-full"
-          role="img"
-          aria-label={imageAlt}
+        <div
+          className="mx-auto w-full max-w-6xl px-4 sm:px-8"
+          style={PERSPECTIVE_STYLE}
         >
-          {/* Glow shadow — outside overflow-hidden so it is never clipped */}
-          <motion.div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-4 rounded-[40%]"
+          <m.div
             style={{
-              opacity: shadowOpacity,
-              filter: shadowBlur,
-              bottom: "-8%",
-              height: "30%",
-              background:
-                "radial-gradient(ellipse 90% 60% at 50% 100%, #38bdf8 0%, #0284c7 35%, transparent 72%)",
+              rotateX,
+              scale,
+              y: translateY,
+              transformOrigin: "50% 100%",
+              willChange: "transform",
+            }}
+            className="relative w-full"
+            role="img"
+            aria-label={imageAlt}
+          >
+            {/* Glow shadow — outside overflow-hidden so it is never clipped */}
+            <m.div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-4 rounded-[40%]"
+              style={{
+                opacity: shadowOpacity,
+                filter: shadowBlur,
+                bottom: "-8%",
+                height: "30%",
+                background:
+                  "radial-gradient(ellipse 90% 60% at 50% 100%, #38bdf8 0%, #0284c7 35%, transparent 72%)",
+              }}
+            />
+
+            <div className="relative w-full overflow-hidden max-w-4xl mx-auto rounded-2xl">
+              {/* ── Mobile image (hidden on sm+) ───────────────────────────── */}
+              <Image
+                src={mobileSrc}
+                alt={imageAlt}
+                width={MOBILE_W}
+                height={mobileH}
+                sizes="(min-width: 640px) 1px, calc(100vw - 2rem)"
+                quality={82}
+                priority
+                {...blurProps}
+                className="select-none w-full sm:mt-0 -mt-10 h-auto block sm:hidden"
+                draggable={false}
+              />
+
+              {/* ── Desktop image (hidden below sm) ───────────────────────── */}
+              <Image
+                src={imageUrl}
+                alt={imageAlt}
+                width={desktopW}
+                height={desktopH}
+                sizes="(max-width: 639px) 1px, (max-width: 1023px) calc(100vw - 4rem), 896px"
+                quality={85}
+                priority
+                {...blurProps}
+                className="select-none w-full h-auto hidden sm:block"
+                draggable={false}
+              />
+
+              {/* Inset border shine */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/9"
+              />
+            </div>
+          </m.div>
+        </div>
+
+        {/* Scroll nudge — declarative animation loads with domAnimation features */}
+        <m.div
+          aria-hidden="true"
+          className="mt-12 flex flex-col items-center gap-2"
+          style={{ opacity: nudgeOp }}
+        >
+          <m.span
+            className="block h-7 w-px origin-top bg-linear-to-b from-sky-500/80 to-transparent"
+            animate={{ scaleY: [0.25, 1, 0.25], opacity: [0.35, 1, 0.35] }}
+            transition={{
+              duration: 1.7,
+              repeat: Infinity,
+              ease: "easeInOut",
+              repeatType: "loop",
             }}
           />
-
-          <div className="relative w-full overflow-hidden max-w-4xl mx-auto rounded-2xl">
-
-            {/* ── Mobile image ──────────────────────────────────────────────
-                width=350 → Next.js srcset capped at 700px (2×350).
-                Excludes the 750px device-size entry.
-                Browser picks: 384px @1×  |  640px @2×
-                quality=65 for an additional ~25% byte reduction vs quality=75.
-            */}
-            <Image
-              src={mobileSrc}
-              alt={imageAlt}
-              width={MOBILE_W}
-              height={mobileH}
-              sizes="(min-width: 640px) 1px, calc(100vw - 2rem)"
-              quality={80}
-              priority
-              {...blurProps}
-              className="select-none sm:w-full w-full sm:mt-0 -mt-10 h-auto block sm:hidden"
-              draggable={false}
-            />
-
-            {/* ── Desktop image ─────────────────────────────────────────────
-                Full-resolution with complete deviceSizes srcset.
-                Hidden on mobile so it is never downloaded on narrow viewports.
-            */}
-            <Image
-              src={imageUrl}
-              alt={imageAlt}
-              width={desktopW}
-              height={desktopH}
-              sizes="(max-width: 639px) 1px, (max-width: 1023px) calc(100vw - 4rem), 896px"
-              quality={80}
-              priority
-              {...blurProps}
-              className="select-none w-full h-auto hidden sm:block"
-              draggable={false}
-            />
-
-            {/* Depth-haze overlay removed per design — no background opacity */}
-
-            {/* Inset border shine */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/9"
-            />
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Scroll nudge */}
-      <motion.div
-        aria-hidden="true"
-        className="mt-12 flex flex-col items-center gap-2"
-        style={{ opacity: nudgeOp }}
-      >
-        {/* <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-slate-500">
-          Scroll to explore
-        </span> */}
-        <motion.span
-          className="block h-7 w-px origin-top bg-linear-to-b from-sky-500/80 to-transparent"
-          animate={{ scaleY: [0.25, 1, 0.25], opacity: [0.35, 1, 0.35] }}
-          transition={{
-            duration: 1.7,
-            repeat: Infinity,
-            ease: "easeInOut",
-            repeatType: "loop",
-          }}
-        />
-      </motion.div>
-    </section>
+        </m.div>
+      </section>
+    </LazyMotion>
   );
 }

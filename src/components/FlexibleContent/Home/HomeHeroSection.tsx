@@ -42,15 +42,15 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
 
     const imageUrl =
         builder
-            ?.width(1800)
+            ?.width(1440)
             ?.format("webp")
             ?.fit("crop")
-            ?.quality(90)
+            ?.quality(85)
             ?.url() || "/images/hero-image.png";
 
     const imageUrlMobile =
         builder
-            ?.width(940)
+            ?.width(860)
             ?.format("webp")
             ?.fit("crop")
             ?.quality(80)
@@ -84,7 +84,9 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
                     alt=""
                     fill
                     sizes="100vw"
-                    quality={70}
+                    quality={60}
+                    loading="lazy"
+                    fetchPriority="low"
                     className="object-cover object-top md:object-fill"
                 />
             </div>
