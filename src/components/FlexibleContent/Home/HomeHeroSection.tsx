@@ -1,3 +1,4 @@
+import { cache } from "react";
 import Image from "next/image";
 
 import { ButtonComponent } from "@/src/components/ButtonComponent";
@@ -32,43 +33,43 @@ const getPortableTextPlain = (
 const DEFAULT_HERO_ALT =
     "FieldEquip platform shown across laptop and mobile devices with scheduling and field operations dashboards";
 
+// ── React Request Memoization ──────────────────────────────────────────────────
+// cache() deduplicates the Sanity URL builder computation within one render pass.
+// If HomeHeroSection is rendered more than once with the same image reference,
+// the URL strings are computed only once and reused from memory.
+const buildHeroImageUrls = cache((image: HeroSectionData["image"] | undefined) => {
+    const builder = image ? urlForImage(image) : undefined;
+    const imageUrl =
+        builder?.width(1440)?.format("webp")?.fit("crop")?.quality(85)?.url()
+        ?? "/images/hero-image.png";
+    const imageUrlMobile =
+        builder?.width(860)?.format("webp")?.fit("crop")?.quality(80)?.url()
+        ?? imageUrl;
+    const blurImageUrl =
+        builder?.width(40)?.height(22)?.blur(20)?.format("webp")?.fit("crop")?.url()
+        ?? undefined;
+    return { imageUrl, imageUrlMobile, blurImageUrl };
+});
+
+const buildImageDimensions = cache((
+    image: HeroSectionData["image"] | undefined,
+    maxWidth: number,
+) => {
+    const imgW = image?.dimensions?.width;
+    const imgH = image?.dimensions?.height;
+    return imgW && imgH ? Math.round((maxWidth / imgW) * imgH) : undefined;
+});
+
 const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
     const heading = data?.heading || "One Platform. Every Field Operation. End to End.";
     const description =
         getPortableTextPlain(data?.description) ||
         "FieldEquip is a digital field service management platform that streamlines operations and boosts throughput, with predictive scheduling and automated job documentation doing the work your team used to do manually.";
 
-    const builder = data?.image ? urlForImage(data?.image) : undefined;
-
-    const imageUrl =
-        builder
-            ?.width(1440)
-            ?.format("webp")
-            ?.fit("crop")
-            ?.quality(85)
-            ?.url() || "/images/hero-image.png";
-
-    const imageUrlMobile =
-        builder
-            ?.width(860)
-            ?.format("webp")
-            ?.fit("crop")
-            ?.quality(80)
-            ?.url() || imageUrl;
-
-
-    const blurImageUrl =
-        builder?.width(40)?.height(22)?.blur(20)?.format("webp")?.fit("crop")?.url();
-
-    const imageAlt = data?.image?.alt?.trim() || DEFAULT_HERO_ALT;
-
     const imageMaxWidth = 1000;
-    const imgW = data?.image?.dimensions?.width
-    const imgH = data?.image?.dimensions?.height
-    const imageMaxHeight =
-      imgW && imgH
-        ? Math.round((imageMaxWidth / imgW) * imgH)
-        : undefined;
+    const { imageUrl, imageUrlMobile, blurImageUrl } = buildHeroImageUrls(data?.image);
+    const imageAlt = data?.image?.alt?.trim() || DEFAULT_HERO_ALT;
+    const imageMaxHeight = buildImageDimensions(data?.image, imageMaxWidth);
 
     return (
         <section

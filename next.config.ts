@@ -35,10 +35,11 @@ const nextConfig = withBundleAnalyzer({
     minimumCacheTTL: isDev ? 0 : 60 * 60 * 24, // 0 in dev, 1 day in prod
   },
   experimental: {
-    optimizeCss: isDev 
-      ? false 
+    // Enables "use cache" directive and component-level Data Cache in Next.js 16.
+    cacheComponents: true,
+    optimizeCss: isDev
+      ? false
       : {
-          // Production-only Critters options
           pruneSource: true,
           mergeStylesheets: true,
           preload: 'swap',

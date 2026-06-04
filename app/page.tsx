@@ -5,10 +5,6 @@ import BaseLayout from "@/src/components/BaseLayout";
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import FlexibleContent from "@/src/components/FlexibleContent";
 
-// ISR: statically pre-rendered at build time, revalidated every hour.
-// On-demand revalidation still works via Sanity webhook → revalidateTag('home').
-export const revalidate = 3600;
-
 type SeoFields = {
   metaTitle?: string;
   metaDescription?: string;

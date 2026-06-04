@@ -1,4 +1,5 @@
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
+import { cacheTag, cacheLife } from "next/cache";
 import type { ReactElement } from "react";
 import type { SanityImage } from "@/src/types/sanity-image";
 
@@ -227,14 +228,26 @@ function SectionFallbackLoader() {
   );
 }
 
+// React Request Memoization: deduplicates getAllCaseStudies() within a single
+// render pass — only one Sanity round-trip no matter how many sections request it.
+const getCaseStudies = cache(getAllCaseStudies);
+
 const FlexibleContent = async ({
   data,
-  page
+  page,
 }: FlexibleContentProps) => {
+  // ── Component-level Data Cache ──────────────────────────────────────────────
+  // "use cache" persists the rendered RSC payload in Next.js Data Cache.
+  // The cache is keyed by the serialised props ({data, page}).
+  // Invalidated on-demand when Sanity publishes: revalidateTag('home') clears it.
+  "use cache";
+  cacheTag('home', 'caseStudy');
+  cacheLife({ revalidate: 3600 });
+
   const hasCaseStudies = data?.sections?.some(
     (s) => (s as FlexibleSection)?._type === 'caseStudiesSection'
   );
-  const caseStudyDocs = hasCaseStudies ? await getAllCaseStudies() : [];
+  const caseStudyDocs = hasCaseStudies ? await getCaseStudies() : [];
 
   const sections = await Promise.all(
     data?.sections && data?.sections?.map(async (section, index: number) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useEffect } from "react";
+import { memo, useMemo, useRef, useEffect } from "react";
 import {
   LazyMotion,
   m,
@@ -37,7 +37,10 @@ interface ScrollMorphImageProps {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function ScrollMorphImage({
+// memo() prevents re-renders when the parent re-renders with identical props.
+// ScrollMorphImage receives only primitive/string props so the shallow comparison
+// is reliable and cheap.
+const ScrollMorphImage = memo(function ScrollMorphImage({
   imageUrl,
   imageUrlMobile,
   imageAlt,
@@ -46,6 +49,18 @@ export default function ScrollMorphImage({
   blurImageUrl,
 }: ScrollMorphImageProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  // useMemo avoids recomputing derived dimensions on every render pass.
+  const { desktopW, desktopH, MOBILE_W, mobileH, mobileSrc, blurProps } = useMemo(() => {
+    const desktopW  = imageWidth ?? 1200;
+    const desktopH  = imageHeight ?? 676;
+    const MOBILE_W  = 420;
+    const mobileH   = Math.round((MOBILE_W / desktopW) * desktopH);
+    const mobileSrc = imageUrlMobile ?? imageUrl;
+    const blurProps = blurImageUrl
+      ? { placeholder: "blur" as const, blurDataURL: blurImageUrl }
+      : { placeholder: "empty" as const };
+    return { desktopW, desktopH, MOBILE_W, mobileH, mobileSrc, blurProps };
+  }, [imageWidth, imageHeight, imageUrlMobile, imageUrl, blurImageUrl]);
 
   // Single source of truth — 0 = fully tilted, 1 = fully flat
   const progress = useMotionValue(0);
@@ -125,18 +140,6 @@ export default function ScrollMorphImage({
       window.removeEventListener("scroll", onScroll);
     };
   }, [progress]);
-
-  // ── Derived dimensions ────────────────────────────────────────────────────
-  const desktopW = imageWidth ?? 1200;
-  const desktopH = imageHeight ?? 676;
-
-  const MOBILE_W = 420;
-  const mobileH  = Math.round((MOBILE_W / desktopW) * desktopH);
-
-  const mobileSrc = imageUrlMobile ?? imageUrl;
-  const blurProps = blurImageUrl
-    ? { placeholder: "blur" as const, blurDataURL: blurImageUrl }
-    : { placeholder: "empty" as const };
 
   return (
     <LazyMotion features={loadFeatures}>
@@ -233,4 +236,6 @@ export default function ScrollMorphImage({
       </section>
     </LazyMotion>
   );
-}
+});
+
+export default ScrollMorphImage;
