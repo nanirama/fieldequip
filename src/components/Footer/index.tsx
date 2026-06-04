@@ -1,8 +1,28 @@
-import { Fragment } from "react";
+import { Fragment, cache } from "react";
+import { cacheTag, cacheLife } from "next/cache";
 import Link from "next/link";
 
+import { client } from "@/src/sanity/lib/client";
+import { settingsQuery } from "@/src/sanity/lib/queries";
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsSocialLink, SettingsMenuData } from "@/src/components/Header/menu-types";
+
+// ── Layer 1: Remote Data Cache ────────────────────────────────────────────────
+// Sanity footer data (links, social, copyright) is shared across all users.
+// "use cache: remote" persists it in the Data Cache until the webhook fires
+// revalidateTag('settings') to invalidate it.
+async function fetchFooterSettings(): Promise<SettingsMenuData> {
+  'use cache: remote';
+  cacheTag('settings');
+  cacheLife({ revalidate: 3600 });
+  const data = await client.fetch<SettingsMenuData | null>(settingsQuery);
+  return data ?? ({} as SettingsMenuData);
+}
+
+// React Request Memoization: deduplicates within the same render tree.
+// If Header's getHeaderSettings() is called in the same request, only one
+// Sanity Data Cache lookup happens (not two separate network calls).
+const getFooterSettings = cache(fetchFooterSettings);
 
 const footerLinkClass =
   "text-sm leading-[140%] text-white transition-colors hover:text-[#13A89E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#13A89E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#234a7a]";
@@ -69,11 +89,16 @@ function SocialIcon({ platform }: { platform: CmsSocialLink["platform"] }) {
   }
 }
 
-type FooterProps = {
-  settings?: SettingsMenuData | null;
-};
+// ── Layer 2: Component RSC Cache ──────────────────────────────────────────────
+// "use cache" on the component caches the fully rendered RSC payload.
+// Footer has no varying props so there is exactly ONE cache entry for the whole
+// site. Invalidated by cacheTag('settings') when the Sanity webhook fires.
+export default async function Footer() {
+  "use cache";
+  cacheTag('settings');
+  cacheLife({ revalidate: 3600 });
 
-export default function Footer({ settings }: FooterProps) {
+  const settings = await getFooterSettings();
   const footerNote = settings?.footerNote?.trim() || "";
   const copyright = settings?.copyright?.trim() || "";
   const socialLinks = settings?.socialLinks ?? [];
