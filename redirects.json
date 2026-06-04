@@ -1,0 +1,127 @@
+[
+    {
+      "source": "/mobile-field-service-management-software/",
+      "destination": "/field-service-management-software/",
+      "permanent": true
+    },
+    {
+      "source": "/oil-field-services/",
+      "destination": "/oil-and-gas/",
+      "permanent": true
+    },
+    {
+      "source": "/field-ticketing-management/",
+      "destination": "/digital-field-ticketing-software/",
+      "permanent": true
+    },
+    {
+      "source": "/asset-service-management/",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/spare-parts-inventory-management-software/",
+      "destination": "/field-inventory-management-software/",
+      "permanent": true
+    },
+    {
+      "source": "/oilfield-trucking-software/",
+      "destination": "/oilfield-logistics-software/",
+      "permanent": true
+    },
+    {
+      "source": "/field-service-reporting-software/",
+      "destination": "/field-service-management-software/",
+      "permanent": true
+    },
+    {
+      "source": "/project-based-field-service-management/",
+      "destination": "/field-service-management-software/",
+      "permanent": true
+    },
+    {
+      "source": "/field-inspection-software/",
+      "destination": "/service-compliance-inspection-management/",
+      "permanent": true
+    },
+    {
+      "source": "/asset-equipment-tracking/",
+      "destination": "/equipment-location-tracking/",
+      "permanent": true
+    },
+    {
+      "source": "/chemical-inventory-management-software/",
+      "destination": "/field-inventory-management-software",
+      "permanent": true
+    },
+    {
+      "source": "/oilfield-equipment-rental-software/",
+      "destination": "/equipment-rental/",
+      "permanent": true
+    },
+    {
+      "source": "/industrial-services",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/equipment-maintenance-service",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/power-utility",
+      "destination": "/energy-utilities/",
+      "permanent": true
+    },
+    {
+      "source": "/commercial-hvac-and-refrigeration/",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/construction",
+      "destination": "/industrial-commercial-services/",    
+      "permanent": true
+    },
+    {
+      "source": "/production-delivery-and-logistics",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/who-we-are/",
+      "destination": "/about-us/",
+      "permanent": true
+    },
+    {
+      "source": "/fieldequip-videos",
+      "destination": "/videos-testimonials/",
+      "permanent": true
+    },
+    {
+      "source": "/field-data-gathering/",
+      "destination": "/oil-and-gas/",
+      "permanent": true
+    },
+    {
+      "source": "/chemical-management-through-automation/",
+      "destination": "/oilfield-logistics-software/",
+      "permanent": true
+    },
+    {
+      "source": "/oilfield-inspection-management/",
+      "destination": "/service-compliance-inspection-management/",
+      "permanent": true
+    },
+    {
+      "source": "/automated-quote-to-cash-for-oilfield/",
+      "destination": "/field-service-quoting-software/",
+      "permanent": true
+    },
+    {
+      "source": "/production-planning-oilfield-management/",
+      "destination": "/oil-and-gas/",
+      "permanent": true
+    }
+]
