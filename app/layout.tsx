@@ -44,11 +44,6 @@ export default function RootLayout({
     >
       <head>
         <OrganizationSchema />
-        <Script
-          id="hs-script-loader"
-          src="https://js.hs-scripts.com/2624857.js"
-          strategy="beforeInteractive"
-        />
         {/* Sanity image CDN */}
         <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
@@ -60,6 +55,11 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <GoogleAnalytics />
+        <Script
+          id="hs-script-loader"
+          src="https://js.hs-scripts.com/2624857.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

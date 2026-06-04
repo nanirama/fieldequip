@@ -1,10 +1,8 @@
 import Image from "next/image";
-import dynamic from "next/dynamic";
 
 import { ButtonComponent } from "@/src/components/ButtonComponent";
 import { urlForImage } from "@/src/sanity/lib/utils";
-
-const ScrollMorphImage = dynamic(() => import("./ScrollMorphImage"));
+import ScrollMorphImage from "./ScrollMorphImage";
 type HeroSectionData = {
     heading?: string;
     description?: Array<{ _type?: string; children?: Array<{ text?: string }> }>;
@@ -44,18 +42,18 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
 
     const imageUrl =
         builder
-            ?.width(1200)
+            ?.width(1800)
             ?.format("webp")
             ?.fit("crop")
-            ?.quality(80)
+            ?.quality(90)
             ?.url() || "/images/hero-image.png";
 
     const imageUrlMobile =
         builder
-            ?.width(640)
+            ?.width(940)
             ?.format("webp")
             ?.fit("crop")
-            ?.quality(65)
+            ?.quality(80)
             ?.url() || imageUrl;
 
 
@@ -64,7 +62,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
 
     const imageAlt = data?.image?.alt?.trim() || DEFAULT_HERO_ALT;
 
-    const imageMaxWidth = 800;
+    const imageMaxWidth = 1000;
     const imgW = data?.image?.dimensions?.width
     const imgH = data?.image?.dimensions?.height
     const imageMaxHeight =

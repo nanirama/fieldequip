@@ -16,7 +16,7 @@ const PERSPECTIVE_STYLE = {
   perspectiveOrigin: "50% 25%",
 } as const;
 
-const IO_THRESHOLDS = Array.from({ length: 21 }, (_, i) => i * 0.05);
+const IO_THRESHOLDS = [0, 0.1];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ScrollMorphImageProps {
@@ -119,13 +119,12 @@ export default function ScrollMorphImage({
   }, [progress]);
 
   // ── Derived dimensions ────────────────────────────────────────────────────
-  const desktopW = imageWidth ?? 800;
-  const desktopH = imageHeight ?? 451;
+  const desktopW = imageWidth ?? 1200;
+  const desktopH = imageHeight ?? 676;
 
-  // Mobile: intrinsic width=350 caps the srcset at ≤700px (2×350).
-  // This excludes the 750px deviceSize entry, forcing the browser to pick
-  // 640px max (at 2× DPR) or 384px (at 1× DPR) — significantly smaller files.
-  const MOBILE_W = 350;
+  // Mobile: intrinsic width increased to 420 to allow better srcset resolution.
+  // This yields 840px at 2× DPR which reduces perceived blurriness on modern phones.
+  const MOBILE_W = 420;
   const mobileH  = Math.round((MOBILE_W / desktopW) * desktopH);
 
   const mobileSrc  = imageUrlMobile ?? imageUrl;
@@ -182,11 +181,11 @@ export default function ScrollMorphImage({
               alt={imageAlt}
               width={MOBILE_W}
               height={mobileH}
-              sizes="calc(100vw - 2rem)"
-              quality={65}
+              sizes="(min-width: 640px) 1px, calc(100vw - 2rem)"
+              quality={80}
               priority
               {...blurProps}
-              className="select-none sm:w-full w-[100%] sm:mt-0 mt-[-40px] h-auto block sm:hidden"
+              className="select-none sm:w-full w-full sm:mt-0 -mt-10 h-auto block sm:hidden"
               draggable={false}
             />
 
@@ -199,24 +198,15 @@ export default function ScrollMorphImage({
               alt={imageAlt}
               width={desktopW}
               height={desktopH}
-              sizes="(max-width: 1024px) calc(100vw - 4rem), 800px"
-              quality={75}
+              sizes="(max-width: 639px) 1px, (max-width: 1023px) calc(100vw - 4rem), 896px"
+              quality={80}
               priority
               {...blurProps}
               className="select-none w-full h-auto hidden sm:block"
               draggable={false}
             />
 
-            {/* Depth-haze overlay — fades as rotateX → 0° */}
-            <motion.div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{
-                opacity: overlayOp,
-                background:
-                  "linear-gradient(to bottom, rgba(2,6,23,0.78) 0%, rgba(2,6,23,0.22) 45%, transparent 68%)",
-              }}
-            />
+            {/* Depth-haze overlay removed per design — no background opacity */}
 
             {/* Inset border shine */}
             <div

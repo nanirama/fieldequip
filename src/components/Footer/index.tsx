@@ -1,5 +1,4 @@
 import { Fragment } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 import { getSlugUrl } from "@/src/lib/utils";
@@ -103,14 +102,16 @@ export default function Footer({ settings }: FooterProps) {
         <div className="flex flex-col justify-between gap-8 border-b border-white/20 pb-20 lg:flex-row lg:gap-4">
           <div className="flex w-full flex-1 flex-col gap-8 lg:w-[40%]">
             <Link href="/" aria-label="FieldEquip home">
-              <Image
-                src="/images/logo-white.svg"
-                alt="FieldEquip Logo"
-                width={187}
-                height={35}
-                sizes="187px"
-              />
-            </Link>
+            <img
+              src="/images/logo-white.svg"
+              alt="FieldEquip Logo"
+              width={187}
+              height={35}
+              decoding="async"
+              loading="lazy"
+              className="block max-w-[187px] h-auto"
+            />
+          </Link>
             {footerNote && (
               <p className="max-w-sm text-sm font-normal leading-[140%] text-white">{footerNote}</p>
             )}
@@ -122,7 +123,7 @@ export default function Footer({ settings }: FooterProps) {
                       <a
                         href={social.url}
                         target="_blank"
-                        rel="noopener noreferrer external"
+                        rel="noopener noreferrer"
                         referrerPolicy="no-referrer"
                         aria-label={`FieldEquip on ${PLATFORM_LABELS[social.platform] ?? social.platform} (opens in a new tab)`}
                         className={socialLinkClass}
