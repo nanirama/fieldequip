@@ -3,7 +3,7 @@ import Image from "next/image";
 
 import { ButtonComponent } from "@/src/components/ButtonComponent";
 import { urlForImage } from "@/src/sanity/lib/utils";
-//import ScrollMorphImage from "./ScrollMorphImage";
+import ScrollMorphImage from "./ScrollMorphImage";
 type HeroSectionData = {
     heading?: string;
     description?: Array<{ _type?: string; children?: Array<{ text?: string }> }>;
@@ -127,14 +127,14 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
                 </div>
             </div>
             <div className="relative z-30 mx-auto w-full">
-                {/* <ScrollMorphImage
+                <ScrollMorphImage
                     imageUrl={imageUrl}
                     imageUrlMobile={imageUrlMobile}
                     imageAlt={imageAlt}
                     imageWidth={imageMaxWidth}
                     imageHeight={imageMaxHeight}
                     blurImageUrl={blurImageUrl ?? undefined}
-                /> */}
+                />
             </div>
         </section>
     );
