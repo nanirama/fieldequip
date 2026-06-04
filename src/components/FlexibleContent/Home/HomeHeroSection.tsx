@@ -276,7 +276,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
        * The h1/p/buttons above remain static server HTML = lower TBT.
        */}
       <div className="relative z-30 mx-auto w-full">
-        <ScrollMorphImage
+        {/* <ScrollMorphImage
           imageUrl={imageUrl}
           imageUrlMobile={imageUrlMobile}
           imageAlt={imageAlt}
@@ -284,7 +284,7 @@ const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
           imageHeight={imageMaxHeight}
           blurImageUrl={blurImageUrl}
           isLCP
-        />
+        /> */}
       </div>
     </section>
   );
