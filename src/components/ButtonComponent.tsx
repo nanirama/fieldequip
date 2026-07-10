@@ -57,10 +57,24 @@ export function ButtonComponent({
   // 👉 Link button (SEO-friendly, crawlable)
   if (href && !disabled) {
     const external = /^https?:\/\//i.test(href);
+
+    // Hash-only links (#section) must use a plain <a> tag.
+    // next/link fires its own scroll-to-top on navigation before resolving the
+    // hash, which races against the browser's anchor scroll and loses — the
+    // page either stays at the top or lands at the wrong position.
+    if (href.startsWith('#')) {
+      return (
+        <a href={href} className={classes} aria-label={ariaLabel}>
+          {children}
+        </a>
+      );
+    }
+
     return (
       <Link
         href={href}
         className={classes}
+        prefetch={false}
         aria-label={ariaLabel}
         {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       >
@@ -75,6 +89,7 @@ export function ButtonComponent({
       className={classes}
       aria-label={ariaLabel}
       href={href || ""}
+      prefetch={false}
     >
       {children}
     </Link>

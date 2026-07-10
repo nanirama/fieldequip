@@ -57,7 +57,7 @@ function NoMiddlemenLayout1({ data }: { data?: NoMiddlemenSectionData }) {
   const imageUrl =
     (primary?.image &&
       urlForImage(primary.image)
-        ?.width(600)
+        ?.width(1400)
         ?.format("webp")
         ?.fit("crop")
         ?.quality(85)
@@ -108,7 +108,64 @@ function NoMiddlemenLayout1({ data }: { data?: NoMiddlemenSectionData }) {
       </div>
       <div className=" w-full bg-brand pb-10 lg:pb-24">
         <div className="middlemen_img  relative max-w-6xl mx-auto">
+          <style>
+            {`
+            .middlemen_img:before {
+                content: '';
+                position: absolute;
+                top: -80px;
+                left: -20px;
+                width: 650px;
+                height: 400px;
+                background: radial-gradient(ellipse 55% 50% at 45% 46%, #0090a9 0%, #008ea5 25%, transparent 78%);
+                background-size: 100%;
+                filter: blur(70px);
+                overflow: hidden;
+                pointer-events: none;
+              }
+
+              .middlemen_img:after {
+                content: '';
+                position: absolute;
+                bottom: -100px;
+                left: 100px;
+                width: 700px;
+                height: 680px;
+                background: radial-gradient(ellipse 58% 52% at 37% 49%, #0090a9 0%, #008ea5 20%, transparent 75%);
+                filter: blur(50px);
+                overflow: hidden;
+                pointer-events: none;
+              }
+              @media screen and (max-width: 767px) {
+                .middlemen_img:before,
+                .middlemen_img:after {
+                  display: none;
+                }
+              }
+            `}
+          </style>
           <div className="middle_img relative">
+            <style>
+              {`
+              .middle_img:after {
+                content: '';
+                position: absolute;
+                bottom: -100px;
+                right: 0;
+                width: 570px;
+                height: 700px;
+                background: radial-gradient(ellipse 62% 56% at 58% 50%, #88ff88 0%, #89ff89 20%, transparent 74%);
+                filter: blur(80px);
+                overflow: hidden;
+                pointer-events: none;
+              }
+              @media screen and (max-width: 767px) {
+                .middle_img:after {
+                  display: none;
+                }
+              }
+`}
+            </style>
           <Image
             src={imageUrl}
             alt={imageAlt}
@@ -123,6 +180,22 @@ function NoMiddlemenLayout1({ data }: { data?: NoMiddlemenSectionData }) {
         </div>
         </div>
         <div className="w-full relative z-30 mx-auto max-w-2xl px-4 sm:px-6 media_content">
+          <style>
+              {`
+              .media_content p {
+                margin-bottom: 20px;
+              }
+                .media_content ul {
+                  margin: 10px 0;
+                  list-style-position: inside;
+                }
+
+                .media_content ul li {
+                  list-style-type: disc;
+                  list-style-position: inside;
+                }
+              `}
+            </style>
           <div className="mt-10">
             <PortableText
               value={bodyBlocks}
@@ -232,16 +305,16 @@ function NoMiddlemenLayout2({ data }: { data?: NoMiddlemenSectionData }) {
       {/* Top: gradient + centered mockups */}
       <div className="">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="relative mx-auto flex max-w-6xl justify-center -my-40">
+          <div className="relative mx-auto flex max-w-4xl justify-center my-10">
             <Image
               src={imageUrl}
               alt={imageAlt}
-              width={1200}
+              width={800}
               height={400}
               className="h-auto w-full object-contain"
               placeholder={blurImageUrl ? "blur" : "empty"}
               blurDataURL={blurImageUrl || undefined}
-              quality={88}
+              quality={80}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1024px"
             />
           </div>
@@ -254,7 +327,7 @@ function NoMiddlemenLayout2({ data }: { data?: NoMiddlemenSectionData }) {
           <div className="flex flex-col items-start gap-6">
             <Link href="/" className="">
               <Image
-                src="/images/logo.svg"
+                src="/images/logo.png"
                 alt="FieldEquip"
                 width={250}
                 height={50}

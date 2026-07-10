@@ -76,12 +76,16 @@ export default function RoiCalculatorWidget() {
             className="w-full cursor-pointer"
             style={{
               accentColor: "#13A89E",
+              // Firefox uses this gradient directly on the input element.
+              // Safari/WebKit ignores it on the element and reads it from
+              // ::-webkit-slider-runnable-track via --range-fill (globals.css).
               background: `linear-gradient(to right, #13A89E ${fillPct}%, #CBD5E1 ${fillPct}%)`,
               height: "6px",
               borderRadius: "9999px",
               outline: "none",
               appearance: "auto",
-            }}
+              ["--range-fill" as string]: `${fillPct}%`,
+            } as React.CSSProperties}
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { revalidateTag } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { type NextRequest, NextResponse } from 'next/server'
 import { parseBody } from 'next-sanity/webhook'
 
@@ -31,6 +31,46 @@ const TAGS_BY_TYPE: Record<string, string[]> = {
   teamMember: ['page'],
 }
 
+// ── GET /api/revalidate?path=<slug>&secret=<SANITY_REVALIDATE_SECRET> ─────────
+// Manually purge a single page by its slug or full path.
+// Examples:
+//   /api/revalidate?path=field-service-work-order-management&secret=xxx
+//   /api/revalidate?path=/products/field-service-work-order-management/&secret=xxx
+//   /api/revalidate?tag=product&secret=xxx
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const secret = searchParams.get('secret')
+  const path   = searchParams.get('path')
+  const tag    = searchParams.get('tag')
+
+  if (revalidateSecret && secret !== revalidateSecret) {
+    return NextResponse.json({ message: 'Invalid secret' }, { status: 401 })
+  }
+
+  if (!path && !tag) {
+    return NextResponse.json(
+      { message: 'Provide ?path=<slug> and/or ?tag=<cache-tag>' },
+      { status: 400 },
+    )
+  }
+
+  const revalidated: string[] = []
+
+  if (tag) {
+    revalidateTag(tag, 'max')
+    revalidated.push(`tag:${tag}`)
+  }
+
+  if (path) {
+    // Normalise: ensure leading slash + trailing slash (trailingSlash: true)
+    const normalised = `/${path.replace(/^\//, '').replace(/\/$/, '')}/`
+    revalidatePath(normalised)
+    revalidated.push(`path:${normalised}`)
+  }
+
+  return NextResponse.json({ revalidated: true, items: revalidated })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { isValidSignature, body } = await parseBody<{
@@ -60,9 +100,7 @@ export async function POST(req: NextRequest) {
     }
 
     for (const tag of tags) {
-      // Provide a second argument to satisfy the TypeScript signature
-      // (some Next.js typings expect two parameters).
-      revalidateTag(tag, undefined)
+      revalidateTag(tag, 'max')
     }
 
     return NextResponse.json({ revalidated: true, tags })

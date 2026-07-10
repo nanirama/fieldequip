@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
+import { preload } from "react-dom";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { ButtonComponent } from "../ButtonComponent";
 import { urlForImage } from "@/src/sanity/lib/utils";
-
+import { ProductHeroDecorations } from "./ProductHeroDecorations";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Button {
@@ -30,6 +30,10 @@ interface ProductHeroSectionProps {
     primaryButton?: Button;
     secondaryButton?: Button;
     image?: ProductHeroImage;
+    imageHeight?: number;
+    imageWidth?: number;
+    imageWidthDesktop?: number;
+    imageHeightDesktop?: number;
   };
 }
 
@@ -38,7 +42,7 @@ interface ProductHeroSectionProps {
 const descriptionComponents: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="text-base leading-relaxed text-[#4B5563] sm:text-lg sm:leading-relaxed">
+      <p>
         {children}
       </p>
     ),
@@ -94,26 +98,32 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   const primaryButton = data?.primaryButton;
   const secondaryButton = data?.secondaryButton;
   const image = data?.image;
+  const imageWidthMobile = data?.imageWidth ?? 640;
+  const imageWidthDesktop = data?.imageWidthDesktop ?? 860;
+  const imageHeightDesktop = data?.imageHeightDesktop ?? Math.round(860 / (image?.asset?.metadata?.dimensions?.aspectRatio ?? 1));
 
   const imageAlt = image?.alt?.trim() || heading || "FieldEquip product interface";
 
+  // auto("format") lets Sanity CDN serve AVIF on Chrome/Edge/Firefox and WebP
+  // on Safari — typically 20-30% smaller than WebP alone for the same quality.
+  // fit("max") preserves natural aspect ratio; no height param needed.
+  // quality(75) is visually indistinguishable from 90 for hero images.
   const imageUrl =
     (image &&
       urlForImage(image)
-        ?.width(1000)
-        ?.format("webp")
+        ?.width(imageWidthDesktop)
         ?.fit("max")
-        ?.quality(85)
+        ?.auto("format")
+        ?.quality(75)
         ?.url()) || "/images/hero-image.png";
 
-  const blurImageUrl =
-    image &&
+  const imageUrlMobile =
     urlForImage(image)
-      ?.width(40)
-      ?.blur(25)
-      ?.format("webp")
+      ?.width(imageWidthMobile)
       ?.fit("max")
-      ?.url();
+      ?.auto("format")
+      ?.quality(60)
+      ?.url() ?? imageUrl;
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)
@@ -126,8 +136,12 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
     secondaryButton?.label?.trim() ||
     (secondaryHref ? "Build Your Business Case" : "");
 
-  const primaryExternal = /^https?:\/\//i.test(primaryHref);
-  const secondaryExternal = /^https?:\/\//i.test(secondaryHref);
+  // No `type` on preload: auto("format") means Sanity serves AVIF or WebP based
+  // on Accept headers — we don't know the format at build time. The browser uses
+  // its own Accept header in the preload request, matches the same format the
+  // <img> will request, so cache hit is guaranteed.
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
+  preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
 
   return (
     <section
@@ -144,34 +158,38 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
         className="pointer-events-none absolute inset-y-0 right-0 w-full max-w-[min(100%,880px)] bg-[linear-gradient(to_right,rgba(20,184,166,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(20,184,166,0.08)_1px,transparent_1px)] bg-[length:28px_28px] opacity-60 lg:max-w-[52%]"
       /> */}
 
-      <div className="absolute top-10 right-60 bg-[url('/images/product-hero-shade1.png')] bg-no-repeat bg-contain z-30 w-[500px] h-[500px] " />
-      <div className="absolute -bottom-10 -left-30 bg-[url('/images/product-hero-shade2.png')] bg-no-repeat bg-contain z-30 w-[330px] h-[430px] " />
-      <div className="absolute -bottom-20 left-10 bg-[url('/images/product-hero-line1.png')] bg-no-repeat bg-contain z-20 w-[260px] h-[570px] " />
-      <div className="absolute -top-20 right-30 bg-[url('/images/product-hero-line2.png')] bg-no-repeat bg-contain z-20 w-[780px] h-[780px] " />
-      <div className="absolute -top-30 right-30 bg-[url('/images/product-hero-line3.png')] bg-no-repeat bg-contain z-20 w-[780px] h-[500px] " />
+      {/* Decorative backgrounds rendered client-side after mount so their ~770 KB
+          of image data doesn't compete with the LCP image fetch. Hidden on mobile
+          at the component level (md:block) — no server-side element at all during
+          the LCP window. */}
+      <div className="hidden md:block invisible md:visible">
+        <ProductHeroDecorations />
+      </div>
 
 
-      <div className="relative z-[40] flex w-full flex-col gap-y-10 py-16 sm:gap-y-12 sm:py-20 lg:flex-row lg:items-stretch lg:gap-x-0 lg:gap-y-0 lg:py-24 xl:py-28">
+      <div className="relative z-40 flex w-full flex-col gap-y-3 pt-24 pb-8 sm:gap-y-12 sm:py-20 lg:flex-row lg:items-stretch lg:gap-x-0 lg:gap-y-0 lg:py-24 xl:py-28">
         {/* Copy: 50% column; pl aligns with left edge of centered max-w-7xl (1280px) inside 1920 */}
         <div
           className="order-1 flex w-full z-80 relative min-w-0 flex-col justify-center px-4 sm:px-6 lg:box-border lg:flex-[0_0_50%] lg:pl-[max(1rem,calc((min(100vw,1640px)-1280px)/2+1rem))] lg:pr-8 xl:pr-10"
         >
           {badge ? (
-            <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-teal-200/80 bg-teal-50 px-3.5 py-1.5 text-xs font-medium tracking-wide text-teal-800 sm:text-sm">
+            <div className="mb-5 flex w-fit items-center justify-start gap-2 rounded-full border border-teal-200/80 bg-teal-50 px-3.5 py-1.5">
               <WrenchIcon className="size-4 shrink-0 text-[#0e1d1b]" />
-              {badge}
-            </span>
+              <h1 className="inline-flex w-fit items-center text-xs font-medium tracking-wide text-teal-800 sm:text-sm">
+                {badge}
+              </h1>
+            </div>
           ) : null}
 
-          <h1
+          <h2
             id="product-hero-heading"
             className="text-balance text-3xl font-bold leading-[1.12] tracking-tight text-black sm:text-4xl sm:leading-[1.1] lg:text-5xl lg:leading-[1.08] xl:text-[3.25rem]"
           >
             {heading}
-          </h1>
+          </h2>
 
           {description?.length ? (
-            <div className="mt-5 max-w-xl space-y-3 sm:mt-6">
+            <div className="mt-3 max-w-xl space-y-3 sm:mt-6">
               <PortableText
                 value={description}
                 components={descriptionComponents}
@@ -179,35 +197,44 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
             </div>
           ) : null}
 
-         
+
           {(primaryHref || secondaryHref) && (
-            <div className="mt-8 flex w-full max-w-xl flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <ButtonComponent variant="primary" className="w-full sm:w-auto" href={primaryHref} target={primaryExternal ? "_blank" : undefined} rel={primaryExternal ? "noopener noreferrer" : undefined}>
-                {primaryLabel}
-              </ButtonComponent>
-              <ButtonComponent variant="secondarytrnsparentWhiteBorder" className="w-full sm:w-auto">
-                {secondaryLabel}
-              </ButtonComponent>
+            <div className="mt-4 flex w-full max-w-xl flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+              {primaryHref && primaryLabel && (
+                <ButtonComponent variant="primary" className="w-full sm:w-auto" href={primaryHref}>
+                  {primaryLabel}
+                </ButtonComponent>
+              )}
+              {secondaryLabel && secondaryHref && (
+                <ButtonComponent variant="secondarytrnsparentWhiteBorder" className="w-full sm:w-auto" href={secondaryHref}>
+                  {secondaryLabel}
+                </ButtonComponent>
+              )}
             </div>
           )}
         </div>
 
-        {/* Image: 50% column; flush to right edge of max-w-[1440px] section (no 7xl inset on this side) */}
-        <div className="order-2 flex min-h-[520px] w-full min-w-0 items-stretch justify-center overflow-hidden px-4 sm:px-6 lg:flex-[0_0_50%] lg:min-h-[420px] lg:justify-end lg:pl-6 lg:pr-0">
-          <figure className="relative h-full min-h-[520px] z-20 w-full max-w-lg sm:max-w-2xl lg:max-w-none">
-            <Image
-              fill
-              src={imageUrl}
-              alt={imageAlt}
-              className="object-contain object-bottom lg:object-[right_bottom]"
-              sizes="(max-width: 1023px) min(100vw - 2rem, 42rem), (max-width: 1920px) 50vw, 960px"
-              placeholder={blurImageUrl ? "blur" : "empty"}
-              blurDataURL={blurImageUrl || undefined}
-              priority
-              fetchPriority="high"
-              quality={85}
-            />
-          </figure>
+        {/* Image: 50% column */}
+        <div className="order-2 flex w-full min-w-0 items-center justify-center px-4 sm:px-6 lg:flex-[0_0_50%] lg:justify-end lg:pl-6 lg:pr-0">
+          <figure className="z-20 w-full max-w-lg sm:max-w-2xl lg:max-w-none">
+              <picture>
+                {/* No type="image/webp" — auto("format") means Sanity picks
+                    AVIF/WebP based on Accept headers; type would lock us to WebP */}
+                <source media="(max-width: 639px)" srcSet={imageUrlMobile} />
+                <source media="(min-width: 640px)" srcSet={imageUrl} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl}
+                  alt={imageAlt}
+                  width={imageWidthDesktop}
+                  height={imageHeightDesktop}
+                  className="w-full h-auto block"
+                  fetchPriority="high"
+                  loading="eager"
+                  draggable={false}
+                />
+              </picture>
+            </figure>
         </div>
       </div>
     </section>

@@ -47,18 +47,52 @@ export default function ImageOnlySection({ data }: Props) {
     >
 
       <div className="relative mx-auto max-w-5xl px-4">
-        {/* {heading ? (
+        {heading ? (
           <h2
             id="image-only-heading"
-            className="mb-8 text-center font-manrope text-2xl font-semibold tracking-tight text-[#020210] sm:mb-10 sm:text-3xl lg:text-4xl"
+            className="mb-8 text-center text-[32px] sm:text-[42px] font-semibold leading-[110%] text-[#020210] font-manrope text-2xl tracking-tight sm:mb-10 sm:text-3xl lg:text-4xl"
           >
             {heading}
           </h2>
-        ) : null} */}
+        ) : null}
 
         <figure className="mx-auto w-full">
           <div className="image_only relative max-w-6xl mx-auto">
+            <style>
+              {`
+              .image_only:before {
+                  content: '';
+                  position: absolute;
+                  top: -30px;
+                  left: -20px;
+                  width: 400px;
+                  height: 300px;
+                  background: radial-gradient(ellipse 60% 55% at 40% 50%, #005dff 10%, #0066ff 35%, transparent 70%);
+                  background-size: 100%;
+                  filter: blur(120px);
+                  overflow: hidden;
+                  pointer-events: none;
+                }
+              `}
+            </style>
             <div className="image_only_img relative">
+              <style>
+                {`
+                .image_only_img:after {
+                    content: '';
+                    position: absolute;
+                    bottom: -100px;
+                    right: 0;
+                    width: 570px;
+                    height: 700px;
+                    background: radial-gradient(ellipse 62% 56% at 58% 50%, #88ff88 0%, #89ff89 20%, transparent 74%);
+                    filter: blur(250px);
+                    overflow: hidden;
+                    pointer-events: none;
+                  }
+                `}
+                </style>
+              
               <Image
                 src={imageUrl}
                 alt={imageAlt}

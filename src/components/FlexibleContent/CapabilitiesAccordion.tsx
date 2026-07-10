@@ -13,6 +13,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 
+
 type SanityImage = {
   asset?: { _ref?: string };
   alt?: string;
@@ -28,14 +29,14 @@ export type CapabilityItem = {
 const ptComponents: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
+      <p className="text-base leading-relaxed text-neutral-600">
         {children}
       </p>
     ),
   },
   marks: {
     strong: ({ children }) => (
-      <strong className="text-2xl font-semibold text-[#020210] dark:text-neutral-100">
+      <strong className="text-2xl font-semibold text-[#020210]">
         {children}
       </strong>
     ),
@@ -43,7 +44,7 @@ const ptComponents: PortableTextComponents = {
       <em className="italic text-neutral-700 dark:text-neutral-300">{children}</em>
     ),
     link: ({ children, value }) => {
-      const href: string = value?.href ?? "";
+      const href: string = value?.href ?? ''
       const newTab: boolean = value?.openInNewTab ?? true;
       return (
         <Link
@@ -166,8 +167,8 @@ function CapabilityAccordionItem({
           <span
             className={`block text-2xl font-semibold ${
               isOpen
-                ? "text-[#020210] dark:text-neutral-100"
-                : "text-neutral-800 dark:text-neutral-200"
+                ? "text-[#020210]"
+                : "text-neutral-800"
             }`}
           >
             {item.title}
@@ -175,16 +176,16 @@ function CapabilityAccordionItem({
         </motion.button>
       </h4>
       <AnimatePresence initial={false} mode="sync">
-        {isOpen && hasBody && (
+        {hasBody && (
           <motion.div
             key={`${itemId}-panel`}
             id={panelId}
             role="region"
             aria-labelledby={headerId}
+            aria-hidden={!isOpen}
             variants={variants}
-            initial={false}
-            animate="open"
-            exit="collapsed"
+            initial="open"
+            animate={isOpen ? "open" : "collapsed"}
             className="overflow-hidden"
           >
             <div className="mt-3 text-base leading-relaxed text-[#020210]/70 dark:text-neutral-400">

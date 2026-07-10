@@ -18,7 +18,8 @@ CLAUDE.md
 # next.js
 /.next/
 /out/
-
+/fe-website-main/
+/fe-website-main/*
 # production
 /build
 
@@ -26,6 +27,7 @@ CLAUDE.md
 .DS_Store
 *.pem
 .agents/*
+.agents/skills/next-browser
 
 # debug
 npm-debug.log*
@@ -43,6 +45,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# locally excluded files
+
 .claude
 .cursor
 .claude/skills/nextjs-performance/SKILL.md

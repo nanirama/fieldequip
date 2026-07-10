@@ -1,36 +1,17 @@
-import { Fragment, cache } from "react";
+import { Fragment } from "react";
 import { cacheTag, cacheLife } from "next/cache";
 import Link from "next/link";
 
-import { client } from "@/src/sanity/lib/client";
-import { footerQuery } from "@/src/sanity/lib/queries";
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsSocialLink } from "@/src/components/Header/menu-types";
 
-// Only the fields Footer actually renders — avoids pulling header mega-menu
-// data (productNav, industriesNav with images, companyNav, resourcesNav).
-type FooterData = {
+type SettingsForFooter = {
   footerNote?: string;
   copyright?: string;
   socialLinks?: { platform: CmsSocialLink["platform"]; url: string }[];
   footerMenu?: { menuTitle?: string; navItems?: { title?: string; _type?: string; slug?: string }[] }[];
   legalNav?: { title?: string; _type?: string; slug?: string }[];
 };
-
-// ── Layer 1: Remote Data Cache ────────────────────────────────────────────────
-// Fetches only the 5 footer-specific fields. "use cache: remote" persists the
-// result in Next.js Data Cache (shared across all users). Invalidated when the
-// Sanity webhook fires revalidateTag('settings').
-async function fetchFooterData(): Promise<FooterData> {
-  'use cache: remote';
-  cacheTag('settings');
-  cacheLife({ revalidate: 3600 });
-  return await client.fetch<FooterData | null>(footerQuery) ?? {};
-}
-
-// React Request Memoization: deduplicates within the same render tree so
-// multiple renders never make more than one Data Cache lookup per request.
-const getFooterData = cache(fetchFooterData);
 
 const footerLinkClass =
   "text-sm leading-[140%] text-white transition-colors hover:text-[#13A89E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#13A89E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#234a7a]";
@@ -97,27 +78,22 @@ function SocialIcon({ platform }: { platform: CmsSocialLink["platform"] }) {
   }
 }
 
-// ── Layer 2: Component RSC Cache ──────────────────────────────────────────────
-// "use cache" on the component caches the fully rendered RSC payload.
-// Footer has no varying props so there is exactly ONE cache entry for the whole
-// site. Invalidated by cacheTag('settings') when the Sanity webhook fires.
-export default async function Footer() {
+export default async function Footer({ settings }: { settings: SettingsForFooter }) {
   "use cache";
   cacheTag('settings');
   cacheLife({ revalidate: 3600 });
 
-  const data = await getFooterData();
-  const footerNote = data.footerNote?.trim() || "";
-  const copyright = data.copyright?.trim() || "";
-  const socialLinks = data.socialLinks ?? [];
-  const navGroups = (data.footerMenu ?? []).map((group) => ({
+  const footerNote = settings.footerNote?.trim() || "";
+  const copyright = settings.copyright?.trim() || "";
+  const socialLinks = settings.socialLinks ?? [];
+  const navGroups = (settings.footerMenu ?? []).map((group) => ({
     title: group.menuTitle?.trim() || "",
     items: (group.navItems ?? []).map((item) => ({
       title: item.title,
       href: item._type ? getSlugUrl(item._type, item.slug ?? undefined) : "#",
     })),
   }));
-  const legalLinks = (data.legalNav ?? []).map((item) => ({
+  const legalLinks = (settings.legalNav ?? []).map((item) => ({
     title: item.title,
     href: item._type ? getSlugUrl(item._type, item.slug ?? undefined) : "#",
   }));
@@ -135,19 +111,36 @@ export default async function Footer() {
         <div className="flex flex-col justify-between gap-8 border-b border-white/20 pb-20 lg:flex-row lg:gap-4">
           <div className="flex w-full flex-1 flex-col gap-8 lg:w-[40%]">
             <Link href="/" aria-label="FieldEquip home">
-            <img
-              src="/images/logo-white.svg"
-              alt="FieldEquip Logo"
-              width={187}
-              height={35}
-              decoding="async"
-              loading="lazy"
-              className="block max-w-[187px] h-auto"
-            />
-          </Link>
+              <img
+                src="/images/logo-white.svg"
+                alt="FieldEquip Logo"
+                width={187}
+                height={35}
+                decoding="async"
+                loading="lazy"
+                className="block max-w-[187px] h-auto"
+              />
+            </Link>
             {footerNote && (
               <p className="max-w-sm text-sm font-normal leading-[140%] text-white">{footerNote}</p>
             )}
+            <address className="not-italic flex flex-col gap-2">
+              <p className="flex items-start gap-2 text-sm leading-[140%] text-white/80">
+                <svg aria-hidden="true" className="mt-0.5 shrink-0" width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1.5C5.515 1.5 3.5 3.515 3.5 6C3.5 9.5 8 14.5 8 14.5C8 14.5 12.5 9.5 12.5 6C12.5 3.515 10.485 1.5 8 1.5ZM8 7.5C7.172 7.5 6.5 6.828 6.5 6C6.5 5.172 7.172 4.5 8 4.5C8.828 4.5 9.5 5.172 9.5 6C9.5 6.828 8.828 7.5 8 7.5Z" fill="currentColor" />
+                </svg>
+                <span>1011 S. Hwy. 6, Suite 117,<br />Houston, Texas 77077, USA</span>
+              </p>
+              <a
+                href="tel:+12818154314"
+                className="flex items-center gap-2 text-sm leading-[140%] text-white/80 transition-colors hover:text-[#13A89E]"
+              >
+                <svg aria-hidden="true" className="shrink-0" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.9 10.6L11.7 10.35C11.15 10.285 10.61 10.48 10.225 10.865L8.65 12.44C6.345 11.27 4.43 9.365 3.26 7.05L4.845 5.465C5.23 5.08 5.425 4.54 5.36 3.99L5.11 1.81C4.995 0.845 4.185 0.12 3.21 0.12H1.71C0.63 0.12 -0.265 1.015 -0.2 2.095C0.275 9.425 6.175 15.315 13.495 15.79C14.575 15.855 15.47 14.96 15.47 13.88V12.38C15.48 11.415 14.755 10.605 13.9 10.6Z" fill="currentColor" />
+                </svg>
+                +1 281-815-4314
+              </a>
+            </address>
             {socialLinks.length > 0 && (
               <nav aria-label="Social links">
                 <ul className="flex flex-row gap-6">

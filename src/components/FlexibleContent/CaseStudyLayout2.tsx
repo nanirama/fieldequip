@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { urlForImage } from "@/src/sanity/lib/utils";
 import { useSlickSlideFocusFix } from "@/src/hooks/useSlickSlideFocusFix";
-
 export type CaseStudy = {
     slug?: string | null;
+    orderBy?: number | null;
     desc?: string | null;
     quote?: string | null;
     statistics?: { label?: string; value?: string }[];
@@ -23,6 +23,19 @@ export type CaseStudyLayout2Props = {
     heading?: string;
     caseStudies?: CaseStudy[];
 };
+
+const defaultCaseStudies: CaseStudy[] = [
+    {
+        desc: "BAZCO Oil Company was running every haul on paper. Dispatch by phone. Tickets arriving days after delivery. Billing waiting on paper to come back from the field.",
+        quote: "FieldEquip is an indispensable tool we use for every aspect of our business, from field ticketing and invoicing to revenue reporting and customer data delivery.",
+        statistics: [
+            { label: "Ticket-to-invoice time", value: "−90%" },
+            { label: "Billing disputes", value: "↓ Dropped" },
+        ],
+        company: "BAZCO Oil Company | Petroleum Transport | Oil and Gas",
+    },
+];
+
 const NextArrow = (props: { onClick?: () => void }) => {
     const { onClick } = props;
     return (
@@ -54,32 +67,33 @@ export default function CaseStudyLayout2({
             ? caseStudiesProp
             : defaultCaseStudies;
 
+    const sliderRef = useRef<Slider>(null);
     const slickWrapRef = useRef<HTMLDivElement>(null);
-    const { onInit, onReInit, afterChange } = useSlickSlideFocusFix(slickWrapRef);
+    const { onInit, onReInit, afterChange: focusFix } = useSlickSlideFocusFix(slickWrapRef);
+
+    const afterChange = useCallback((index: number) => {
+        focusFix(index);
+    }, [focusFix]);
 
     const settings = useMemo(
         () => ({
-            infinite: true,
+            infinite: false,
             slidesToShow: 1,
             slidesToScroll: 1,
             arrows: true,
             dots: false,
-            autoplay: true,
-            autoplaySpeed: 5000,
+            autoplay: false,
             speed: 600,
-            pauseOnHover: true,
             adaptiveHeight: true,
             nextArrow: <NextArrow />,
             prevArrow: <PrevArrow />,
-
             responsive: [
                 {
                     breakpoint: 1024,
                     settings: {
                         slidesToShow: 3,
-                        slidesToScroll: 3,
-                        infinite: true,
-                        dots: true
+                        slidesToScroll: 1,
+                        dots: true,
                     }
                 },
                 {
@@ -113,7 +127,7 @@ export default function CaseStudyLayout2({
             <div className="blur-[300px] overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_55%_50%_at_72%_38%,#1a4d2e_0%,#0d2e1a_40%,transparent_70%)] absolute top-52 left-[23%] bg-no-repeat bg-contain z-40 w-[340px] h-[300px]" />
 
             {/* <div className="absolute -bottom-10 right-[0%] bg-[url('/images/casestudy2-shade2.png')] bg-no-repeat bg-cover z-1 w-[100%] h-[700px]" /> */}
-            <div className="absolute -bottom-10 right-[0%] blur-[100px] overflow-hidden pointer-events-none opacity-40 bg-[radial-gradient(ellipse_65%_55%_at_78%_42%,#9bff9b_0%,#9aff9a_30%,#9bff9b_55%,transparent_72%)] bg-no-repeat bg-cover z-1 w-[800px] h-[300px] border border-red-600" />
+            <div className="absolute -bottom-10 right-[0%] blur-[100px] overflow-hidden pointer-events-none opacity-40 bg-[radial-gradient(ellipse_65%_55%_at_78%_42%,#9bff9b_0%,#9aff9a_30%,#9bff9b_55%,transparent_72%)] bg-no-repeat bg-cover z-1 w-[800px] h-[300px]" />
 
             {/* <div className="absolute top-10 left-[15%] bg-[url('/images/casestudy2-shade3.png')] bg-no-repeat bg-contain z-1 w-[1100px] h-[600px]  rotate-[33.87deg] transform" /> */}
             <div className="blur-[400px] overflow-hidden pointer-events-none absolute top-10 left-[15%] opacity-40 bg-[radial-gradient(ellipse_45%_45%_at_48%_45%,#9cff9c_0%,#a1ffa1_45%,transparent_70%)] bg-no-repeat bg-contain z-1 w-[1100px] h-[600px]  rotate-[33.87deg] transform" />
@@ -130,7 +144,7 @@ export default function CaseStudyLayout2({
 
                 {/* Slider */}
                 <div className="mt-16" ref={slickWrapRef}>
-                    <Slider {...settings}>
+                    <Slider ref={sliderRef} {...settings}>
                         {caseStudies.map((item: any, index: number) => {
                            return(
                             <div key={item.slug ?? index} className="px-2 sm:px-4">
@@ -138,16 +152,17 @@ export default function CaseStudyLayout2({
 
                                     {/* Left */}
                                     <div className="bg-white px-[32px] lg:max-w-[397px] shadow-[0_13px_32px_-2px_#3C5B8D1A] border-0 w-full py-[42px] shadow-sm flex flex-col justify-between rounded-[14px]">
-                                        <div className="relative h-10 max-w-[180px]">
+                                        <div className="relative h-20">
                                             {(() => {
                                                 const logo = item.logoimage as ({ alt?: string } & Parameters<typeof urlForImage>[0]) | null | undefined;
-                                                const logoSrc = logo ? urlForImage(logo)?.width(360).height(80).fit("max").format("webp").url() : null;
+                                                const logoSrc = logo ? urlForImage(logo)?.width(360).fit("max").format("webp").url() : null;
                                                 return logoSrc ? (
                                                     <Image
                                                         src={logoSrc}
                                                         fill
                                                         alt={logo?.alt?.trim() || "logo"}
                                                         className="object-contain object-left"
+                                                        quality={80}
                                                     />
                                                 ) : null;
                                             })()}
@@ -155,7 +170,7 @@ export default function CaseStudyLayout2({
                                         <div className="flex flex-col gap-[42px]">
                                             <p className="leading-[140%] text-[#191921] text-base w-full">{item.desc ?? ""}</p>
                                             <div className="border-l-2 pl-[14px] border-[#13A89E]">
-                                                {(item.statistics ?? []).slice(0, 3).map((stat, i) => (
+                                                {(item.statistics ?? []).slice(0, 3).map((stat: { label?: string; value?: string }, i: number) => (
                                                     <div key={i} className="flex flex-row gap-4 py-1">
                                                         <p className="text-[#191921] leading-[130%] w-[60%]">{stat.label ?? ""}</p>
                                                         <h4 className="leading-[100%] text-xl font-semibold text-[#191921] w-[40%]">{stat.value ?? ""}</h4>
@@ -175,6 +190,7 @@ export default function CaseStudyLayout2({
                                                 height={560}
                                                 alt={item.company ?? "case-study-img"}
                                                 className="lg:w-[398px] lg:h-[560px] w-full rounded-[14px] object-cover"
+                                                quality={80}
                                             />
                                         )}
                                         {/* <Image src={'/images/casestudy-img.webp'} width={398} height={560} alt="case-study-img" className="lg:w-[398px] lg:h-[560px] w-full rounded-[14px]" /> */}
@@ -182,7 +198,7 @@ export default function CaseStudyLayout2({
 
                                     <div className="bg-white px-[32px] lg:max-w-[397px] w-full pb-[42px] shadow-sm flex flex-col justify-between rounded-[14px]">
                                         <div className="flex justify-end">
-                                            <Image src={'/images/“.webp'} alt="quotation" width={188} height={167} className="w-[188px]" />
+                                            <Image src={'/images/quote.webp'} alt="quotation" width={188} height={167} className="w-[188px]" />
                                         </div>
                                         <h3 className="text-lg sm:text-xl max-w-[333px] leading-[130%] font-semibold mb-4 text-[#020210]">{item.quote ?? ""}</h3>
                                         <p className="text-sm sm:text-base text-[#191921]">{item.company ?? ""}</p>

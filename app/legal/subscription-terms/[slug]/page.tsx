@@ -4,12 +4,15 @@ import { notFound } from "next/navigation";
 import { PortableText, type PortableTextComponents } from "next-sanity";
 import type { PortableTextBlock } from "@portabletext/types";
 
-import BaseLayout from "@/src/components/BaseLayout";
+
+import JsonLd from "@/src/components/JsonLd";
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import {
   loadLegalLandingPage,
   loadLegalLandingPageSlugs,
 } from "@/src/sanity/loader/loadQuery";
+import { buildBreadcrumbs, slugToLabel } from "@/lib/schema";
+
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -100,10 +103,11 @@ function titleWithNumber(title: string, index: number) {
 export async function generateStaticParams() {
   const result = await loadLegalLandingPageSlugs();
   const rows = (result.data as { slug?: string }[] | null | undefined) ?? [];
-
-  return rows
+  const params = rows
     .filter((row): row is { slug: string } => Boolean(row?.slug))
     .map((row) => ({ slug: row.slug }));
+  if (!params.length) return [{ slug: '__placeholder' }];
+  return params;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -137,7 +141,13 @@ export default async function LegalLandingPageRoute({ params }: PageProps) {
   const contents = data.contents?.filter((item) => item?.title?.trim()) ?? [];
 
   return (
-     <main className="bg-white">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Subscription Terms", href: "/legal/subscription-terms" },
+        { label: data.title || slugToLabel(slug), href: `/legal/subscription-terms/${slug}` },
+      ])} />
+      <main className="bg-white">
       <article className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <header>
           <h1 className="font-manrope text-3xl font-semibold tracking-tight text-[#020210] sm:text-4xl">
@@ -219,5 +229,6 @@ export default async function LegalLandingPageRoute({ params }: PageProps) {
         ) : null}
       </article>
       </main>
+    </>
   );
 }

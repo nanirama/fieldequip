@@ -22,7 +22,7 @@ export default function IntegrationCard({ integration }: { integration: Integrat
 
   return (
     <article className="w-full">
-      <div className="relative aspect-[5/3] w-full overflow-hidden  rounded-3xl">
+      <div className="relative aspect-[5/3] w-full overflow-hidden  rounded-2xl shadow-[0_0_25px_-3px_rgba(0,0,0,0.1)]">
         {href ? (
           <Link href={href} aria-label={title ? `${title} integration` : "Integration details"} className="block h-full w-full">
             {imageUrl ? (
@@ -31,7 +31,8 @@ export default function IntegrationCard({ integration }: { integration: Integrat
                 alt={image?.alt?.trim() || title || "Integration image"}
                 fill
                 sizes="(max-width: 1024px) 100vw, 33vw"
-                className="object-contain  rounded-3xl"
+                className="max-w-[270px] mx-auto p-8 object-contain  rounded-3xl"
+                quality={80}
               />
             ) : null}
           </Link>
@@ -41,7 +42,8 @@ export default function IntegrationCard({ integration }: { integration: Integrat
             alt={image?.alt?.trim() || title || "Integration image"}
             fill
             sizes="(max-width: 1024px) 100vw, 33vw"
-            className="object-contain  rounded-2xl"
+            className="max-w-[270px] mx-auto p-8 object-contain  rounded-2xl"
+            quality={80}
           />
         ) : null}
       </div>

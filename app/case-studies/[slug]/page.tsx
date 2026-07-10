@@ -32,7 +32,12 @@ import CaseStudyWideImage, {
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import OtherCaseStudies from "@/src/components/CaseStudies/OtherCaseStudies";
 import type { OtherCaseStudyListItem } from "@/src/components/CaseStudies/OtherCaseStudyCard";
-import { loadCaseStudies, loadCaseStudy, loadCaseStudySlugs } from "@/src/sanity/loader/loadQuery";
+import { cache } from "react";
+import { loadCaseStudies, loadCaseStudy, loadCaseStudySlugs, loadHeader } from "@/src/sanity/loader/loadQuery";
+
+const getHeader = cache(loadHeader)
+import JsonLd from "@/src/components/JsonLd";
+import { buildBreadcrumbs, slugToLabel } from "@/lib/schema";
  
 function formatLastUpdated(iso?: string) {
   if (!iso) return null;
@@ -81,7 +86,9 @@ type CaseStudyPageProps = {
 export async function generateStaticParams() {
   const rows = await loadCaseStudySlugs();
   const data = rows.data as { slug?: string }[] | null | undefined;
-  return (data ?? []).filter((row) => Boolean(row?.slug)).map((row) => ({ slug: row.slug as string }));
+  const params = (data ?? []).filter((row) => Boolean(row?.slug)).map((row) => ({ slug: row.slug as string }));
+  if (!params.length) return [{ slug: '__placeholder' }];
+  return params;
 }
  
 export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
@@ -93,24 +100,29 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
     return seoGenerateMetadata({
       title: "Case study",
       description: "",
-      url: `/case-studies/${slug}`,
+      url: `/case-study/${slug}`,
     });
   }
  
   return seoGenerateMetadata({
     title: data.seo?.metaTitle || data.name || "Case study",
     description: data.seo?.metaDescription || "",
-    url: `/case-studies/${slug}`,
+    url: `/case-study/${slug}`,
     imageUrl: data.seo?.metaImage,
   });
 }
  
 export default async function CaseStudyDetailPage({ params }: CaseStudyPageProps) {
   const { slug } = await params;
-  const [result, listingResult] = await Promise.all([loadCaseStudy(slug), loadCaseStudies()]);
+  const [result, listingResult, headerResult] = await Promise.all([
+    loadCaseStudy(slug),
+    loadCaseStudies(),
+    getHeader(),
+  ]);
   const data = result.data as CaseStudyDetailDoc | null | undefined;
   const allStudies = (listingResult.data as OtherCaseStudyListItem[] | null | undefined) ?? [];
   const otherCaseStudies = allStudies.filter((c) => c.slug && c.slug !== slug);
+  const settings = headerResult.data ?? {}
  
   if (!data) {
     notFound();
@@ -122,7 +134,13 @@ export default async function CaseStudyDetailPage({ params }: CaseStudyPageProps
   const lastUpdated = formatLastUpdated(data._updatedAt);
  
   return (
-    <BaseLayout layout="light">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Case Studies", href: "/case-studies" },
+        { label: data.name || slugToLabel(slug), href: `/case-study/${slug}` },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
       <section className="mx-auto max-w-7xl px-6 py-14 sm:py-16 mt-20 lg:px-8 lg:py-24">
         {showMetaPill ? (
           <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full bg-[#EAEEF1] px-4 py-2 text-xs font-medium text-[#020210]/80 sm:text-sm">
@@ -189,6 +207,7 @@ export default async function CaseStudyDetailPage({ params }: CaseStudyPageProps
       />
  
       <OtherCaseStudies items={otherCaseStudies} />
-    </BaseLayout>
+      </BaseLayout>
+    </>
   );
 }

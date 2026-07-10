@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
+import { preload } from "react-dom";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { ButtonComponent } from "../ButtonComponent";
-
 import { urlForImage } from "@/src/sanity/lib/utils";
+import { FeaturesHeroDecorations } from "./FeaturesHeroDecorations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +33,10 @@ interface FeaturesHeroData {
   primaryButton?: CmsButton;
   secondaryButton?: CmsButton;
   image?: HeroSanityImage;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageWidthDesktop?: number;
+  imageHeightDesktop?: number;
 }
 
 interface Props {
@@ -42,11 +46,6 @@ interface Props {
 
 function isValidHref(url: unknown): url is string {
   return typeof url === "string" && url.trim().length > 0;
-}
-
-function shouldOpenInNewTab(url: string, buttonType?: string | null): boolean {
-  if (buttonType === "external" || buttonType === "newTab") return true;
-  return /^https?:\/\//i.test(url);
 }
 
 // ─── Portable Text ────────────────────────────────────────────────────────────
@@ -79,49 +78,25 @@ const ptComponents: PortableTextComponents = {
   },
 };
 
-// ─── Buttons ──────────────────────────────────────────────────────────────────
-
-function PrimaryCta({
-  label,
-  href,
-  external,
-}: {
-  label: string;
-  href: string;
-  external: boolean;
-}) {
+function WrenchIcon({ className }: { className?: string }) {
   return (
-    <Link
-      href={href}
-      {...(external
-        ? { target: "_blank", rel: "noopener noreferrer" }
-        : {})}
-      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#14B8A6] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0d9488] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6] sm:w-auto sm:min-h-0"
+    <svg
+      className={className}
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden
     >
-      {label}
-    </Link>
-  );
-}
-
-function SecondaryCta({
-  label,
-  href,
-  external,
-}: {
-  label: string;
-  href: string;
-  external: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      {...(external
-        ? { target: "_blank", rel: "noopener noreferrer" }
-        : {})}
-      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#D1D5DB] bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 sm:w-auto sm:min-h-0"
-    >
-      {label}
-    </Link>
+      <path
+        d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -136,19 +111,23 @@ function Breadcrumb({ breadcrumb }: { breadcrumb?: FeaturesHeroData["breadcrumb"
       .map((i) => ({ title: i.title!.trim(), href: i.href ?? undefined })),
   ];
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 sm:mb-8">
-      <ol className="flex flex-wrap items-center gap-2 text-xs text-[#020210]/70 sm:text-sm">
+    <nav aria-label="Breadcrumb" className="relative z-10 mb-6 sm:mb-8">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#020210]/70 sm:text-sm">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return (
             <li key={`${item.title}-${index}`} className="flex items-center gap-2">
               {index > 0 ? <span className="text-[#13A89E]">{">"}</span> : null}
               {item.href && !isLast ? (
-                <Link href={item.href} className="hover:text-[#020210]">
+                <Link
+                  href={item.href}
+                  className="cursor-pointer py-2 hover:text-[#020210]"
+                  style={{ touchAction: "manipulation" }}
+                >
                   {item.title}
                 </Link>
               ) : (
-                <span aria-current={isLast ? "page" : undefined} className={isLast ? "text-[#020210]" : ""}>
+                <span aria-current={isLast ? "page" : undefined} className={isLast ? "py-2 text-[#020210]" : "py-2"}>
                   {item.title}
                 </span>
               )}
@@ -169,25 +148,31 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   const primaryButton = data?.primaryButton;
   const secondaryButton = data?.secondaryButton;
   const image = data?.image;
+  const imageWidthDesktop = data?.imageWidthDesktop ?? 800;
+  const imageHeightDesktop = data?.imageHeightDesktop ?? 600;
+  const imageWidthMobile = data?.imageWidth ?? 640;
   const imageAlt = image?.alt?.trim() || heading || "Product interface preview";
 
+  // auto("format") lets Sanity CDN serve AVIF on Chrome/Edge/Firefox and WebP
+  // on Safari — typically 20-30% smaller than WebP alone for the same quality.
+  // fit("max") preserves natural aspect ratio.
+  // quality(75) desktop, quality(75) mobile — good balance for hero images.
   const imageUrl =
     (image &&
       urlForImage(image)
-        ?.width(1000)
-        ?.format("webp")
+        ?.width(imageWidthDesktop)
         ?.fit("max")
-        ?.quality(85)
+        ?.auto("format")
+        ?.quality(75)
         ?.url()) || "/images/hero-image.png";
 
-  const blurImageUrl =
-    image &&
+  const imageUrlMobile =
     urlForImage(image)
-      ?.width(40)
-      ?.blur(25)
-      ?.format("webp")
+      ?.width(imageWidthMobile)
       ?.fit("max")
-      ?.url();
+      ?.auto("format")
+      ?.quality(75)
+      ?.url() ?? imageUrl;
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)
@@ -199,48 +184,46 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   const secondaryLabel =
     secondaryButton?.label?.trim() || (secondaryHref ? "Learn more" : "");
 
+  // No `type` on preload: auto("format") means Sanity serves AVIF or WebP based
+  // on Accept headers — we don't know the format at build time. The browser uses
+  // its own Accept header in the preload request, matches the same format the
+  // <img> will request, so cache hit is guaranteed.
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
+  preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
+
   return (
     <section
       aria-labelledby="features-hero-heading"
       className="relative w-full overflow-hidden max-w-[1920px] mx-auto bg-white pt-28 pb-16"
     >
-      {/* Decorative dot pattern — left edge (design) */}
-      {/* <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-[radial-gradient(#93c5fd_1px,transparent_1px)] bg-[length:10px_10px] opacity-[0.35] sm:w-20 sm:opacity-40"
-      /> */}
-      <div className="absolute top-10 right-60 bg-[url('/images/product-hero-shade1.png')] bg-no-repeat bg-contain z-30 w-[500px] h-[500px] " />
-      <div className="absolute -bottom-10 -left-30 bg-[url('/images/product-hero-shade2.png')] bg-no-repeat bg-contain z-30 w-[330px] h-[430px] " />
-      <div className="absolute -bottom-20 left-0 bg-[url('/images/product-hero-line1.png')] bg-no-repeat bg-contain z-20 w-[260px] h-[570px] " />
-      <div className="absolute -top-20 right-50 bg-[url('/images/product-hero-line2.png')] bg-no-repeat bg-contain z-20 w-[780px] h-[780px] " />
-      <div className="absolute -top-30 right-50 bg-[url('/images/product-hero-line3.png')] bg-no-repeat bg-contain z-20 w-[780px] h-[500px] " />
-
+      {/* Decorative backgrounds rendered client-side after mount so their ~770 KB
+          of image data doesn't compete with the LCP image fetch. Hidden on mobile
+          at the component level — no server-side element at all during the LCP window. */}
+      <div className="hidden md:block">
+        <FeaturesHeroDecorations />
+      </div>
 
       <div className="relative mx-auto z-40 max-w-7xl px-4 pb-12 pt-10 sm:pb-14 sm:pt-12 lg:pb-20 lg:pt-16">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-x-12 lg:gap-y-0 xl:gap-x-16">
           {/* Content column — first in DOM for mobile-first; visually left on lg */}
           <div className="order-1 flex min-w-0 flex-col lg:pr-4">
-          <Breadcrumb breadcrumb={data?.breadcrumb} />
+            <Breadcrumb breadcrumb={data?.breadcrumb} />
 
             {badge ? (
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-400">
-                {badge}
-              </p>
+              <div className="mb-5 flex w-fit items-center justify-start gap-2 rounded-full border border-teal-200/80 bg-teal-50 px-3.5 py-1.5">
+                <WrenchIcon className="size-4 shrink-0 text-[#0e1d1b]" />
+                <h1 className="inline-flex w-fit items-center text-xs font-medium tracking-wide text-teal-800 sm:text-sm">
+                  {badge}
+                </h1>
+              </div>
             ) : null}
 
-            {/* <h1
-              id="features-hero-heading"
-              className="border border-red-600 text-balance font-manrope text-3xl font-semibold leading-[1.12] tracking-tight text-black sm:text-4xl sm:leading-[1.1] lg:text-[2.425rem] xl:text-5xl xl:leading-[1.08]"
-            >
-              {heading}
-            </h1> */}
-
-            <h1
+            <h2
               id="features-hero-heading"
               className="font-manrope text-2xl font-semibold leading-[1.12] tracking-tight text-black sm:text-4xl sm:leading-[1.1] lg:text-[1.8rem] xl:text-4xl xl:leading-[1.08]"
             >
               {heading}
-            </h1>
+            </h2>
 
             {description && description.length > 0 ? (
               <div className="mt-5 max-w-xl space-y-3 sm:mt-6 leading-[150%] text-[#020210]/70">
@@ -265,22 +248,24 @@ export default function FeaturesHeroSection({ data, page }: Props) {
           {/* Image column — below content on small screens, right on lg */}
           <div className="order-2 w-full min-w-0">
             <figure className="mx-auto w-full max-w-xl lg:mx-0 lg:max-w-none">
-              <div className="rounded-2xl bg-[#0f172a] p-2 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.35)] sm:p-2.5">
-                <div className="overflow-hidden rounded-xl bg-slate-800 ring-1 ring-white/10">
-                  <Image
+              <div className="overflow-hidden rounded-xl">
+                <picture>
+                  {/* No type="image/webp" — auto("format") means Sanity picks
+                      AVIF/WebP based on Accept headers; type would lock us to WebP */}
+                  <source media="(max-width: 639px)" srcSet={imageUrlMobile} />
+                  <source media="(min-width: 640px)" srcSet={imageUrl} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={imageUrl}
                     alt={imageAlt}
-                    width={1200}
-                    height={900}
-                    placeholder={blurImageUrl ? "blur" : "empty"}
-                    blurDataURL={blurImageUrl || undefined}
+                    width={imageWidthDesktop}
+                    height={imageHeightDesktop}
                     className="h-auto w-full object-cover object-top"
-                    priority
                     fetchPriority="high"
-                    sizes="(max-width: 1023px) 100vw, 50vw"
-                    quality={85}
+                    loading="eager"
+                    draggable={false}
                   />
-                </div>
+                </picture>
               </div>
             </figure>
           </div>

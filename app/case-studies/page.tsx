@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import type { PortableTextBlock } from "@portabletext/types";
 
 import BaseLayout from "@/src/components/BaseLayout";
 import CaseStudyCard, { type CaseStudyCardData } from "@/src/components/CaseStudies/CaseStudyCard";
+import JsonLd from "@/src/components/JsonLd";
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import type { SanityImage } from "@/src/types/sanity-image";
-import { loadCaseStudiesall, loadCaseStudiesPage } from "@/src/sanity/loader/loadQuery";
+import { loadCaseStudiesall, loadCaseStudiesPage, loadHeader } from "@/src/sanity/loader/loadQuery";
+import { buildBreadcrumbs } from "@/lib/schema";
+
+const getHeader = cache(loadHeader)
 
 type CaseStudiesPageData = {
   name?: string;
@@ -45,16 +50,26 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CaseStudiesPage() {
-  const [pageResult, caseStudiesResult] = await Promise.all([loadCaseStudiesPage(), loadCaseStudiesall()]);
+  const [pageResult, caseStudiesResult, headerResult] = await Promise.all([
+    loadCaseStudiesPage(),
+    loadCaseStudiesall(),
+    getHeader(),
+  ]);
   const data = pageResult.data as CaseStudiesPageData | null | undefined;
   const caseStudies = (caseStudiesResult.data as CaseStudyData[] | null | undefined) ?? [];
+  const settings = headerResult.data ?? {}
 
   if (!data) {
     notFound();
   }
 
   return (
-    <BaseLayout layout="light">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Case Studies", href: "/case-studies" },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
       <section className="relative overflow-hidden bg-white">
         {/* <div className="pointer-events-none absolute right-0 top-0 h-[360px] w-[420px] bg-[url('/images/globe.png')] bg-contain bg-top bg-no-repeat opacity-40" /> */}
 
@@ -75,6 +90,7 @@ export default async function CaseStudiesPage() {
           ))}
         </div>
       </section>
-    </BaseLayout>
+      </BaseLayout>
+    </>
   );
 }

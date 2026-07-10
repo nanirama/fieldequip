@@ -62,7 +62,7 @@ const HomeRoleSection = ({ data }: { data?: HomeRoleSectionData }) => {
   const cards = Array.isArray(data?.cards) && data.cards.length > 0 ? data.cards : fallbackCards;
 
   return (
-    <div className="w-full py-8">
+    <div className="w-full py-8 bg-white">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-left flex items-start justify-start">
           <h2 className="text-[42px] text-[#020210] font-semibold leading-[110%] w-auto">{sectionHeading}</h2>

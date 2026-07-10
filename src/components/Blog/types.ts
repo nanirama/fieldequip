@@ -4,6 +4,7 @@ export type BlogCategory = {
   _id: string;
   title?: string;
   slug?: string;
+  orderBy?: number;
 };
 
 export type BlogAuthor = {

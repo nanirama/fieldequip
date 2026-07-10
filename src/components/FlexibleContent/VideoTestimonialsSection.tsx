@@ -312,12 +312,12 @@ export default function VideoTestimonialsSection({
       {(heading || subheading) && (
         <div className="mx-auto max-w-7xl px-4 sm:mb-20 mb-10">
           {heading && (
-            <h2
+            <h1
               id="vts-heading"
               className="font-manrope text-4xl font-medium tracking-tight text-[#020210] sm:text-5xl"
             >
               {heading}
-            </h2>
+            </h1>
           )}
           {subheading && (
             <p className="mt-3 max-w-3xl text-base leading-relaxed text-[#020210]/70">

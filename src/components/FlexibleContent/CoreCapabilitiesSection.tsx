@@ -97,7 +97,7 @@ export default function CoreCapabilitiesSection({ data }: { data?: CoreCapabilit
                   <article className={["h-full rounded-2xl p-6 sm:p-7", isDark ? "bg-white/10" : "bg-[#E8EAEE]"].join(" ")}>
                     <div className="mb-4 w-[42px] h-[42px] rounded-full flex justify-center items-center bg-[#d9e0e9]">
                       {iconUrl ? (
-                        <Image src={iconUrl} alt="" aria-hidden width={40} height={40} className="h-10 w-10 object-contain" />
+                        <Image src={iconUrl} alt="" aria-hidden width={40} height={40} className="h-10 w-10 object-contain" quality={80} />
                       ) : (
                         <DefaultIcon />
                       )}

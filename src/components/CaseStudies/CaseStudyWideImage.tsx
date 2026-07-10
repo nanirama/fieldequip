@@ -59,25 +59,27 @@ export default function CaseStudyWideImage({ image, title }: Props) {
   const lqip = normalizeLqip(image.lqip);
 
   const alt = image.alt?.trim() || defaultAlt(title);
-
+  
   return (
     <figure className="mx-auto w-full max-w-[1920px]">
-      <div className="relative w-full overflow-hidden bg-slate-100">
-        <Image
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          className="h-auto w-full object-cover"
-          sizes="(max-width: 1920px) 100vw, 1920px"
-          quality={82}
-          priority={false}
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          placeholder={lqip ? "blur" : "empty"}
-          blurDataURL={lqip}
-        />
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="relative w-full overflow-hidden bg-slate-100 mb-6 rounded-lg">
+          <Image
+            src={src}
+            alt={alt}
+            width={width}
+            height={height}
+            className="h-auto w-full object-cover rounded-lg"
+            sizes="(max-width: 1920px) 100vw, 1920px"
+            quality={80}
+            priority={false}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            placeholder={lqip ? "blur" : "empty"}
+            blurDataURL={lqip}
+          />
+        </div>
       </div>
     </figure>
   );

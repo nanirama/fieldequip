@@ -97,7 +97,72 @@ export default function CaseStudiesSection() {
             aria-labelledby="case-study-heading"
             className="relative w-full pt-8 pb-24 case_study_bg"
         >
+             <style>
+                {`
+                .case_study_bg:before {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    z-index: 20;
+                    background: radial-gradient(ellipse 80% 40% at 20% 52%, #5ea1ff 0%, #5e9cff 30%, #5595ff 55%, transparent 80%);
+                    background-size: 100%;
+                    filter: blur(100px);
+                    overflow: hidden;
+                    pointer-events: none;
+                    width: 220px;
+                    height: 320px;
+                    opacity: 0.2;
+                    }
+
+                    .case_study_bg:after {
+                    content: '';
+                    position: absolute;
+                    top: 5%;
+                    left: 0;
+                    z-index: 20;
+                    background: radial-gradient(ellipse 75% 38% at 18% 50%, #9aff9a 0%, #9bff9b 30%, #97ff97 55%, transparent 78%);
+                    background-size: 100%;
+                    filter: blur(100px);
+                    overflow: hidden;
+                    pointer-events: none;
+                    width: 320px;
+                    height: 200px;
+                    opacity: 0.1;
+                    }
+                    @media screen and (max-width: 767px) {
+                    .case_study_bg:before,
+                    .case_study_bg:after {
+                        display: none;
+                    }
+                    }
+                `}
+            </style>
             <div className="mx-auto max-w-7xl px-4 border-t border-[#162A4A]/20 pt-16 case_study_bg2">
+            <style>
+                {`
+                .case_study_bg2:after {
+                    content: '';
+                    position: absolute;
+                    top: 15%;
+                    right: -10%;
+                    z-index: 20;
+                    background: radial-gradient(ellipse 75% 38% at 18% 50%, #9aff9a 0%, #9bff9b 30%, #97ff97 55%, transparent 78%);
+                    background-size: 100%;
+                    filter: blur(100px);
+                    overflow: hidden;
+                    pointer-events: none;
+                    width: 320px;
+                    height: 200px;
+                    opacity: 0.1;
+                    }
+                    @media screen and (max-width: 767px) {
+                    .case_study_bg2:after {
+                        display: none;
+                    }
+                    }
+                `}
+            </style>
 
                 {/* Heading */}
                 <h2

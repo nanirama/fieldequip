@@ -1,21 +1,23 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { memo, useCallback, useEffect, useState } from "react";
 
+// All menus are statically imported so their JS is bundled with HeaderClient
+// and available the instant the page hydrates — no chunk download delay on
+// first hover/tap. Dynamic imports caused 1-3s blank menus on iPhone/MacBook.
+import ProductsMenuMobile from "./ProductsMenuMobile";
+import IndustriesMenuMobile from "./IndustriesMenuMobile";
+import CompanyMenuMobile from "./CompanyMenuMobile";
+import ResourcesMenuMobile from "./ResourcesMenuMobile";
+import ProductsMenuDesktop from "./ProductsMenuDesktop";
+import IndustriesMenuDesktop from "./IndustriesMenuDesktop";
+import CompanyMenuDesktop from "./CompanyMenuDesktop";
+import ResourcesMenuDesktop from "./ResourcesMenuDesktop";
+
 import type { SettingsMenuData } from "./menu-types";
 import type { HeaderProps } from "./index";
-
-// Code-split each mega-menu — they are large and only needed on interaction.
-const ProductsMenuDesktop   = dynamic(() => import("./ProductsMenuDesktop"),   { loading: () => null });
-const ProductsMenuMobile    = dynamic(() => import("./ProductsMenuMobile"),    { loading: () => null });
-const IndustriesMenuDesktop = dynamic(() => import("./IndustriesMenuDesktop"), { loading: () => null });
-const IndustriesMenuMobile  = dynamic(() => import("./IndustriesMenuMobile"),  { loading: () => null });
-const CompanyMenuDesktop    = dynamic(() => import("./CompanyMenuDesktop"),    { loading: () => null });
-const CompanyMenuMobile     = dynamic(() => import("./CompanyMenuMobile"),     { loading: () => null });
-const ResourcesMenuDesktop  = dynamic(() => import("./ResourcesMenuDesktop"),  { loading: () => null });
-const ResourcesMenuMobile   = dynamic(() => import("./ResourcesMenuMobile"),   { loading: () => null });
 
 type HeaderClientProps = HeaderProps & { settings: SettingsMenuData };
 
@@ -23,7 +25,7 @@ function HamburgerIcon({ open }: { open: boolean }) {
   return (
     <span aria-hidden="true" className="relative z-50 flex h-5 w-5 flex-col justify-between">
       <span className={["block h-[1.5px] w-full rounded-full bg-current origin-center transition-all duration-300", open ? "translate-y-2.5 rotate-45" : ""].join(" ")} />
-      <span className={["block h-[1.5px] w-full rounded-full bg-current transition-all duration-300",              open ? "scale-x-0 opacity-0"         : ""].join(" ")} />
+      <span className={["block h-[1.5px] w-full rounded-full bg-current transition-all duration-300", open ? "scale-x-0 opacity-0" : ""].join(" ")} />
       <span className={["block h-[1.5px] w-full rounded-full bg-current origin-center transition-all duration-300", open ? "-translate-y-[8.5px] -rotate-45" : ""].join(" ")} />
     </span>
   );
@@ -34,22 +36,32 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
   const [isScrolled, setIsScrolled] = useState(false);
   const isDark = layout === "dark";
 
-  // Lock body scroll when mobile menu is open.
+  // Scroll lock: overflow:hidden on html+body freezes scroll without any layout
+  // shift, position change, or window.scrollTo — avoiding two known bugs:
+  // 1. Mac Safari: position:fixed removes the scrollbar → ICB widens → the
+  //    (min-width:1024px) media query fires false-positive → closeMobile() runs
+  //    immediately after open → menu appears to not open at all.
+  // 2. iOS Safari: window.scrollTo after removing position:fixed causes the URL
+  //    bar to appear/hide, shifting layout mid-frame and misplacing the hamburger
+  //    button's touch hit-test on the next tap.
   useEffect(() => {
+    const html = document.documentElement;
     const body = document.body;
-    const prevOverflow     = body.style.overflow;
-    const prevPaddingRight = body.style.paddingRight;
     if (mobileOpen) {
-      const sbw = window.innerWidth - document.documentElement.clientWidth;
+      const sbw = window.innerWidth - html.clientWidth;
+      html.style.overflow = "hidden";
       body.style.overflow = "hidden";
+      // Compensate scrollbar width so content doesn't jump (Mac only, sbw=0 on iOS)
       if (sbw > 0) body.style.paddingRight = `${sbw}px`;
     } else {
-      body.style.overflow     = "";
+      html.style.overflow = "";
+      body.style.overflow = "";
       body.style.paddingRight = "";
     }
     return () => {
-      body.style.overflow     = prevOverflow;
-      body.style.paddingRight = prevPaddingRight;
+      html.style.overflow = "";
+      body.style.overflow = "";
+      body.style.paddingRight = "";
     };
   }, [mobileOpen]);
 
@@ -70,16 +82,19 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu when the window reaches the desktop breakpoint.
+  // Close mobile menu on genuine resize to desktop.
+  // Uses window.innerWidth (total window width including scrollbar space) instead
+  // of e.matches (ICB = clientWidth) so that hiding the scrollbar via scroll-lock
+  // doesn't falsely trigger this and immediately close a newly-opened menu.
   useEffect(() => {
     const mq = window.matchMedia("(min-width: 1024px)");
-    const close = (e: MediaQueryListEvent) => { if (e.matches) setMobileOpen(false); };
+    const close = () => { if (window.innerWidth >= 1024) setMobileOpen(false); };
     mq.addEventListener("change", close);
     return () => mq.removeEventListener("change", close);
   }, []);
 
   const closeMobile = useCallback(() => setMobileOpen(false), []);
-  const logoSrc = isDark ? "/images/logowhite.svg" : "/images/logo.svg";
+  const logoSrc = isDark ? "/images/logo-white.png" : "/images/logo.png";
 
   return (
     <>
@@ -94,7 +109,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
       <header
         role="banner"
         className={[
-          "fixed inset-x-0 top-0 z-50! w-full transition-[background,color,box-shadow] duration-300",
+          "fixed inset-x-0 top-0 z-1000 w-full transition-[background,color,box-shadow] duration-300",
           isDark
             ? isScrolled ? "bg-[#162a4a]" : "bg-transparent"
             : ["bg-transparent", isScrolled ? "bg-white shadow-sm shadow-slate-900/5" : "", "border-b border-slate-200/80"].join(" "),
@@ -106,7 +121,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
             aria-label="FieldEquip — go to homepage"
             className="shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
           >
-            <img src={logoSrc} alt="FieldEquip" width={187} height={35} loading="eager" decoding="async" className="h-auto" />
+            <Image src={logoSrc} alt="FieldEquip" width={187} height={35} priority className="h-auto" />
           </Link>
 
           {/* ── Desktop nav — always in the DOM; hidden on mobile via Tailwind ── */}
@@ -142,6 +157,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
           <div className="flex items-center gap-3">
             <Link
               href="/demo"
+              prefetch={false}
               className={[
                 "hidden sm:inline-flex items-center rounded-full px-4.5 py-2.5 text-sm font-semibold leading-[140%] text-white transition-all duration-200",
                 "bg-[#13A89E] shadow-sm hover:bg-[#119184] hover:shadow-md hover:shadow-teal-500/20 active:scale-95",
@@ -159,7 +175,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
               aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
               onClick={() => setMobileOpen((v) => !v)}
               className={[
-                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 lg:hidden",
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 lg:hidden touch-manipulation",
                 isDark ? "text-white hover:bg-white/10" : "text-slate-800 hover:bg-slate-100",
               ].join(" ")}
             >
@@ -174,7 +190,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
         aria-hidden={!mobileOpen}
         onClick={closeMobile}
         className={[
-          "fixed inset-0 z-40 transition-opacity duration-300 lg:hidden",
+          "fixed inset-0 z-990 transition-opacity duration-300 lg:hidden",
           isDark ? "bg-black/60" : "bg-black/30",
           mobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
@@ -187,14 +203,14 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
         aria-modal="true"
         aria-label="Navigation menu"
         className={[
-          "fixed inset-0 z-50 flex max-h-dvh flex-col overflow-hidden transition-transform duration-300 ease-in-out lg:hidden",
-          mobileOpen ? "translate-y-0" : "-translate-y-full",
+          "fixed inset-0 z-1001 flex max-h-dvh flex-col overflow-hidden transition-transform duration-300 ease-in-out lg:hidden",
+          mobileOpen ? "translate-y-0" : "-translate-y-full pointer-events-none",
           isDark ? "border-b border-white/10 bg-white" : "border-b border-slate-200 bg-white",
         ].join(" ")}
       >
-        <div className="flex h-14 shrink-0 items-center justify-between px-4 sm:px-6">
+        <div className="flex h-14  mt-4 shrink-0 items-center justify-between px-6 sm:px-6">
           <Link href="/">
-            <img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto" />
+            <Image src="/images/logo.png" alt="FieldEquip" width={187} height={35} className="h-auto" />
           </Link>
           <button
             type="button"
@@ -211,41 +227,37 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
 
         <div aria-hidden="true" className={isDark ? "mx-4 h-px bg-white/10" : "mx-4 h-px bg-slate-200"} />
 
-        <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto px-4 py-4">
+        <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
           <div className="flex min-h-full items-center justify-center">
             <ul className="flex w-full max-w-md flex-col gap-1">
-              {mobileOpen && (
-                <>
-                  <li>
-                    <ProductsMenuMobile
-                      menuTitle={settings.productsTitle}
-                      menuDescription={settings.productsDescription}
-                      items={settings.productNav}
-                    />
-                  </li>
-                  <li>
-                    <IndustriesMenuMobile
-                      menuTitle={settings.industriesTitle}
-                      menuDescription={settings.industriesDescription}
-                      industries={settings.industriesNav ?? []}
-                    />
-                  </li>
-                  <li>
-                    <CompanyMenuMobile
-                      menuTitle={settings.companyTitle}
-                      menuDescription={settings.companyDescription}
-                      items={settings.companyNav}
-                    />
-                  </li>
-                  <li>
-                    <ResourcesMenuMobile
-                      menuTitle={settings.resourcesTitle}
-                      menuDescription={settings.resourcesDescription}
-                      items={settings.resourcesNav}
-                    />
-                  </li>
-                </>
-              )}
+              <li>
+                <ProductsMenuMobile
+                  menuTitle={settings.productsTitle}
+                  menuDescription={settings.productsDescription}
+                  items={settings.productNav}
+                />
+              </li>
+              <li>
+                <IndustriesMenuMobile
+                  menuTitle={settings.industriesTitle}
+                  menuDescription={settings.industriesDescription}
+                  industries={settings.industriesNav ?? []}
+                />
+              </li>
+              <li>
+                <CompanyMenuMobile
+                  menuTitle={settings.companyTitle}
+                  menuDescription={settings.companyDescription}
+                  items={settings.companyNav}
+                />
+              </li>
+              <li>
+                <ResourcesMenuMobile
+                  menuTitle={settings.resourcesTitle}
+                  menuDescription={settings.resourcesDescription}
+                  items={settings.resourcesNav}
+                />
+              </li>
             </ul>
           </div>
         </nav>
@@ -259,7 +271,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
             Schedule a Demo
           </Link>
         </div>
-        <span tabIndex={0} aria-hidden="true" className="sr-only" />
+        <span tabIndex={0} className="sr-only" />
       </div>
     </>
   );

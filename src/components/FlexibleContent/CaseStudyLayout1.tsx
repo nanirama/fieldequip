@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -10,6 +10,7 @@ import { useSlickSlideFocusFix } from "@/src/hooks/useSlickSlideFocusFix";
 
 export type CaseStudy = {
     slug?: string | null;
+    orderBy?: number | null;
     result?: string | null;
     title?: string | null;
     desc1?: string | null;
@@ -82,20 +83,23 @@ export default function CaseStudyLayout1({
             ? caseStudiesProp
             : defaultCaseStudies;
 
+    const sliderRef = useRef<Slider>(null);
     const slickWrapRef = useRef<HTMLDivElement>(null);
-    const { onInit, onReInit, afterChange } = useSlickSlideFocusFix(slickWrapRef);
+    const { onInit, onReInit, afterChange: focusFix } = useSlickSlideFocusFix(slickWrapRef);
+
+    const afterChange = useCallback((index: number) => {
+        focusFix(index);
+    }, [focusFix]);
 
     const settings = useMemo(
         () => ({
-        infinite: true,
+        infinite: false,
         slidesToShow: 1,
         slidesToScroll: 1,
         arrows: true,
         dots: false,
-        autoplay: true,
-        autoplaySpeed: 5000,
+        autoplay: false,
         speed: 600,
-        pauseOnHover: true,
         adaptiveHeight: true,
         nextArrow: <NextArrow />,
         prevArrow: <PrevArrow />,
@@ -109,9 +113,9 @@ export default function CaseStudyLayout1({
     return (
         <section
             aria-labelledby="case-study-heading"
-            className="relative w-full pt-8 pb-24 case_study_bg"
+            className="relative w-full pt-8 pb-24 case_study_bg overflow-hidden bg-white"
         >
-            <div className="mx-auto max-w-7xl px-4 border-t border-[#162A4A]/20 pt-16 case_study_bg2">
+                <div className="mx-auto max-w-7xl px-4 border-t border-[#162A4A]/20 pt-16 case_study_bg2">
 
                 {/* Heading */}
                 <h2
@@ -123,7 +127,7 @@ export default function CaseStudyLayout1({
 
                 {/* Slider */}
                 <div className="sm:mt-16 mt-20" ref={slickWrapRef}>
-                    <Slider {...settings}>
+                    <Slider ref={sliderRef} {...settings}>
                         {caseStudies.map((item, index) => (
                             <div key={item.slug ?? index} className="">
 

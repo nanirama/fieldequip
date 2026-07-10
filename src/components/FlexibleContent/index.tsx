@@ -1,5 +1,4 @@
 import { Suspense, cache } from "react";
-import { cacheTag, cacheLife } from "next/cache";
 import type { ReactElement } from "react";
 import type { SanityImage } from "@/src/types/sanity-image";
 
@@ -45,6 +44,11 @@ import ContactSection from "./ContactSection";
 import ScheduleDemoSection from "./ScheduleDemoSection";
 import RoiCalculatorSection from "./RoiCalculatorSection";
 import WhitePaperHeroSection from "./WhitePaperHeroSection";
+import WhitePaperFormSection from "./WhitePaperFormSection";
+import WhitePaperIntroSection from "./WhitePaperIntroSection";
+import FieldEquipAdvantageSection from "./FieldEquipAdvantageSection";
+import PackageDetailsSection from "./PackageDetailsSection";
+import RoiPreviewSection from "./RoiPreviewSection";
 import { getAllCaseStudies } from "@/src/sanity/loader/loadQuery";
 import { mapCaseStudyToLayout1, mapCaseStudyToLayout2 } from "@/src/sanity/lib/mapCaseStudiesForSection";
 
@@ -160,8 +164,7 @@ type SectionComponentProps = {
 const sectionComponents: Record<string, (props: SectionComponentProps) => ReactElement> = {
   homeHeroSection: HomeHeroSection,
   homeStatsSection: HomeStatsSection,
-  homeRolesSection: HomeRoleSection,
-  // homeRoleSection: HomeRoleSection,
+  homeRolesSection: HomeRoleSection as (props: SectionComponentProps) => ReactElement,
   clientLogosSection: ClientLogosSection,
   noMiddlemenSection: NoMiddlemenSection as (props: SectionComponentProps) => ReactElement,
   caseStudiesSection: CaseStudiesSection,
@@ -201,6 +204,11 @@ const sectionComponents: Record<string, (props: SectionComponentProps) => ReactE
   platformDeepDiveSection: PlatformDeepDiveSection as (props: SectionComponentProps) => ReactElement,
   faqSection: FaqSection as (props: SectionComponentProps) => ReactElement,
   whitePaperHeroSection: WhitePaperHeroSection as (props: SectionComponentProps) => ReactElement,
+  whitePaperFormSection: WhitePaperFormSection as (props: SectionComponentProps) => ReactElement,
+  whitePaperIntroSection: WhitePaperIntroSection as (props: SectionComponentProps) => ReactElement,
+  fieldEquipAdvantage: FieldEquipAdvantageSection as (props: SectionComponentProps) => ReactElement,
+  packageDetailsSection: PackageDetailsSection as (props: SectionComponentProps) => ReactElement,
+  roiPreviewSection: RoiPreviewSection as (props: SectionComponentProps) => ReactElement,
 };
 
 type FlexibleContentProps = {
@@ -213,7 +221,7 @@ type FlexibleContentProps = {
 function SectionFallbackLoader() {
   return (
     <div
-      className="flex min-h-50 items-center justify-center"
+      className="flex min-h-[400px] items-center justify-center"
       role="status"
       aria-live="polite"
       aria-label="Loading section"
@@ -236,44 +244,50 @@ const FlexibleContent = async ({
   data,
   page,
 }: FlexibleContentProps) => {
-  // ── Component-level Data Cache ──────────────────────────────────────────────
-  // "use cache" persists the rendered RSC payload in Next.js Data Cache.
-  // The cache is keyed by the serialised props ({data, page}).
-  // Invalidated on-demand when Sanity publishes: revalidateTag('home') clears it.
-  "use cache";
-  cacheTag('home', 'caseStudy');
-  cacheLife({ revalidate: 3600 });
-
+  // "use cache" removed from FlexibleContent:
+  // 1. It was tagged cacheTag('home','caseStudy') on EVERY page (products,
+  //    industries, etc.) — so revalidateTag('home') cleared all pages, and
+  //    revalidateTag('product') never cleared the product-page FlexibleContent.
+  // 2. Data is already cached at the loadQuery layer (ISR + Sanity CDN).
+  //    A second cache layer here adds overhead without benefit.
+  // 3. Removing it makes FlexibleContent synchronous → page HTML streams faster.
+  //console.log('page',page)
   const hasCaseStudies = data?.sections?.some(
     (s) => (s as FlexibleSection)?._type === 'caseStudiesSection'
   );
   const caseStudyDocs = hasCaseStudies ? await getCaseStudies() : [];
 
-  const sections = await Promise.all(
-    data?.sections && data?.sections?.map(async (section, index: number) => {
-      const typedSection = section as FlexibleSection;
-      if (!typedSection?._type) return null;
-      const Section = sectionComponents[typedSection._type];
-      if (!Section) return null;
+  const sections = (data?.sections ?? []).map((section, index: number) => {
+    const typedSection = section as FlexibleSection;
+    if (!typedSection?._type) return null;
+    const Section = sectionComponents[typedSection._type];
+    if (!Section) return null;
 
-      let sectionData: FlexibleSection = typedSection;
-      if (typedSection._type === "caseStudiesSection" && caseStudyDocs.length > 0) {
-        const useLayout2 = typedSection.layout === "layout2";
-        sectionData = {
-          ...typedSection,
-          caseStudies: useLayout2
-            ? caseStudyDocs.map(mapCaseStudyToLayout2)
-            : caseStudyDocs.map(mapCaseStudyToLayout1),
-        };
-      }
+    //console.log('typedSection._type',typedSection._type)
 
-      return (
-        <Suspense fallback={<SectionFallbackLoader />} key={index}>
-          <Section data={sectionData} page={page} />
-        </Suspense>
-      );
-    }) || []
-  );
+    let sectionData: FlexibleSection = typedSection;
+    if (typedSection._type === "caseStudiesSection" && caseStudyDocs.length > 0) {
+      const useLayout2 = typedSection.layout === "layout2";
+      sectionData = {
+        ...typedSection,
+        caseStudies: useLayout2
+          ? caseStudyDocs.map(mapCaseStudyToLayout2)
+          : caseStudyDocs.map(mapCaseStudyToLayout1),
+      };
+    }
+
+    // The first section is always above-the-fold (hero). Never wrap it in
+    // Suspense — a tiny fallback → full-viewport expansion causes CLS 0.2+.
+    if (index === 0) {
+      return <Section data={sectionData} page={page} key={index} />;
+    }
+
+    return (
+      <Suspense fallback={<SectionFallbackLoader />} key={index}>
+        <Section data={sectionData} page={page} />
+      </Suspense>
+    );
+  });
 
   return <div className="w-full">{sections}</div>;
 };

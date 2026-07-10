@@ -91,7 +91,11 @@ export const productHeroSectionFragment = `
     secondaryButton{
       ${buttonFragment}
     },
-    image
+    image,
+    "imageWidthDesktop": 860,
+    "imageHeightDesktop": round(860 / image.asset->metadata.dimensions.aspectRatio),
+    "imageWidth": 640,
+    "imageHeight": round(640 / image.asset->metadata.dimensions.aspectRatio),
   }
 `
 
@@ -108,7 +112,11 @@ export const featuresHeroSectionFragment = `
     secondaryButton{
       ${buttonFragment}
     },
-    image
+    image,
+    "imageWidthDesktop": 800,
+    "imageHeightDesktop": round(800 / image.asset->metadata.dimensions.aspectRatio),
+    "imageWidth": 640,
+    "imageHeight": round(640 / image.asset->metadata.dimensions.aspectRatio),
   }
 `
 
@@ -120,11 +128,13 @@ export const featuresCapabilitiesSectionFragment = `
     features{
       heading,
       layout,
-      image,
       capabilities[]{
         _key,
         title,
-        image,
+        "image": image{
+          alt,
+          asset
+        },
         description
       }
     }
@@ -149,6 +159,7 @@ export const featureGridSectionFragment = `
     eyebrow,
     heading,
     subHeading,
+    description,
     headingAlignment,
     items[]{
       _key,
@@ -167,6 +178,7 @@ export const featureGridSectionFragment = `
         }
       }
     },
+    footerNote,
     footnote{text, linkLabel, linkUrl},
     theme
   }
@@ -190,7 +202,7 @@ export const caseStudiesSectionFragment = `
     _type,
     heading,
     layout,
-    caseStudies[]{
+    "caseStudies": caseStudies[] {
       _key,
       desc,
       quote,
@@ -267,7 +279,8 @@ export const platformDeepDiveSectionFragment = `
         _key,
         title,
         description,
-        link{label, url}
+        link{label, url},
+        image
       }
     }
   }
@@ -499,7 +512,18 @@ export const integrationsSectionFragment = `
     _type,
     sectionTag,
     heading,
-    description
+    description,
+    "integrations": *[_type == "integrations" && !(_id in path("drafts.**"))] | order(orderBy asc, title asc){
+      _id,
+      title,
+      listingOnly,
+      "slug": slug.current,
+      shortDescription,
+      image{
+        ...,
+        alt
+      }
+    }
   }
 `
 
@@ -694,11 +718,91 @@ export const whitePaperHeroSectionFragment = `
   }
 `
 
+export const fieldEquipAdvantageSectionFragment = `
+  _type == "fieldEquipAdvantage" => {
+    _type,
+    heading,
+    cards[]{
+      _key,
+      title,
+      description[]
+    }
+  }
+`
+
 export const roiCalculatorSectionFragment = `
   _type == "roiCalculatorSection" => {
     _type,
     sectionTag,
     heading,
     description
+  }
+`
+
+export const whitePaperFormSectionFragment = `
+  _type == "whitePaperFormSection" => {
+    _type,
+    formHeading,
+    formId,
+    featuredImage{
+      ...,
+      alt,
+      "lqip": asset->metadata.lqip,
+      "dimensions": asset->metadata.dimensions
+    }
+  }
+`
+
+export const whitePaperIntroSectionFragment = `
+  _type == "whitePaperIntroSection" => {
+    _type,
+    leftContent,
+    rightContent
+  }
+`
+
+export const roiPreviewSectionFragment = `
+  _type == "roiPreviewSection" => {
+    _type,
+    eyebrow,
+    headline,
+    description,
+    cta{
+      label,
+      href
+    },
+    trustNote,
+    previewPanel{
+      label,
+      stats[]{
+        _key,
+        value,
+        label
+      },
+      footnote
+    }
+  }
+`
+
+export const packageDetailsSectionFragment = `
+  _type == "packageDetailsSection" => {
+    _type,
+    eyebrow,
+    heading,
+    subHeading,
+    description,
+    packages[]{
+      _key,
+      tier,
+      isFeatured,
+      heading,
+      description,
+      "features": features[].label,
+      cta{
+        label,
+        href,
+        openInNewTab
+      }
+    }
   }
 `

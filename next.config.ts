@@ -13,16 +13,15 @@ const nextConfig = withBundleAnalyzer({
     ignoreBuildErrors: true,
   },
 
-  // Optimize initial page load by reducing redirects processing time
   trailingSlash: true,
   async redirects() {
     return redirectsList;
   },
+
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 20, 32, 48, 60, 64, 96, 128, 256, 384],
-    // Must include every `quality` passed to `next/image` and values Next may request for remote URLs.
     qualities: [20, 25, 50, 60, 65, 70, 72, 75, 78, 80, 82, 85, 86, 88, 90],
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
@@ -31,33 +30,23 @@ const nextConfig = withBundleAnalyzer({
       { protocol: "https", hostname: "img.youtube.com" },
       { protocol: "https", hostname: "i.ytimg.com" },
     ],
-    unoptimized: isDev, // 🚀 Disable optimization in dev to skip caching
-    minimumCacheTTL: isDev ? 0 : 60 * 60 * 24, // 0 in dev, 1 day in prod
+    unoptimized: isDev,
+    minimumCacheTTL: isDev ? 0 : 60 * 60 * 24,
   },
   experimental: {
-    // Enables "use cache" directive and component-level Data Cache in Next.js 16.
-    cacheComponents: true,
-    optimizeCss: isDev
-      ? false
-      : {
-          pruneSource: true,
-          mergeStylesheets: true,
-          preload: 'swap',
-        },
+    optimizeCss: false,
+    dynamicIO: true,      // ← enables "use cache" directive
+    useCache: true,       // ← enables cacheLife / cacheTag
   },
-
-  // Enable compression for faster response
   compress: true,
   poweredByHeader: false,
-  output: "standalone",
-  
-  // Optimize build output
+  //output: "standalone",
   productionBrowserSourceMaps: false,
 
   async headers() {
     return isDev
       ? [
-          // 🚫 Disable caching for everything in development
+          // 🚫 No caching in development
           {
             source: "/(.*)",
             headers: [
@@ -69,41 +58,162 @@ const nextConfig = withBundleAnalyzer({
           },
         ]
       : [
-          // ✅ Catch-all first — specific rules below override it (last-match wins)
+          // ✅ Catch-all — CSP + cache for HTML pages
+          // s-maxage=3600: CDN caches the rendered HTML for 1 hour.
+          // stale-while-revalidate=86400: after expiry, CDN serves the stale
+          // page *immediately* while revalidating in the background — users
+          // never wait for a cold SSR render after a tag revalidation.
+          // max-age=0: browser always checks the CDN; ensures fresh content
+          // after on-demand revalidation without a browser hard-refresh.
           {
             source: "/(.*)",
             headers: [
-              { key: "Cache-Control", value: "public, max-age=3600, s-maxage=3600" },
+              {
+                key: "Cache-Control",
+                value: "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+              },              
+              {
+                key: "Content-Security-Policy",
+                value: [
+                  // Fallback for any directive not explicitly listed
+                  "default-src 'self'",
+
+                  // Scripts — Next.js + HubSpot + Google Tag Manager + YouTube
+                  "script-src 'self' 'unsafe-inline' 'unsafe-eval'" +
+                    " https://js.hsforms.net" +
+                    " https://js.hs-scripts.com" +
+                    " https://js.hs-analytics.net" +
+                    " https://js.hubspot.com" +
+                    " https://js.hscollectedforms.net" +
+                    " https://js.usemessages.com" +
+                    " https://hubspot-forms-static-embed.s3.amazonaws.com" + // ← ADD THIS
+                    " https://www.googletagmanager.com" +
+                    " https://www.google-analytics.com" +
+                    " https://www.youtube.com" +
+                    " https://s.ytimg.com",
+
+                  // Styles — Next.js inline + HubSpot injected CSS
+                  "style-src 'self' 'unsafe-inline' https://forms.hsforms.com",
+
+                  // Frames — HubSpot forms + YouTube embeds
+                  "frame-src 'self'" +
+                    " https://*.hsforms.com" +   
+                    " https://forms.hsforms.com" +
+                    " https://share.hsforms.com" +
+                    " https://www.youtube.com" +
+                    " https://www.youtube-nocookie.com" +
+                    " https://youtube.com",
+
+                  // Connections — HubSpot API + GTM + Analytics
+                  "connect-src 'self'" +
+                    " https://api.hsforms.com" +
+                    " https://forms.hubspot.com" +
+                    " https://*.hsforms.com" +     
+                    " https://forms.hsforms.com" +           // ← ADD THIS
+                    " https://collector.hubspot.com" +
+                    " https://*.hubspot.com" +
+                    " https://hubspot-forms-static-embed.s3.amazonaws.com" + // ← ADD THIS
+                    " https://*.hubapi.com" +
+                    " https://www.google-analytics.com" +
+                    " https://analytics.google.com" +
+                    " https://stats.g.doubleclick.net",
+
+                  // Images — Sanity CDN + HubSpot + YouTube thumbnails + Unsplash
+                  "img-src 'self' data: blob:" +
+                    " https://cdn.sanity.io" +
+                    " https://*.hubspot.com" +
+                    " https://*.hsforms.com" +
+                    " https://*.hubapi.com" +
+                    " https://img.youtube.com" +
+                    " https://i.ytimg.com" +
+                    " https://source.unsplash.com" +
+                    " https://via.placeholder.com" +
+                    " https://www.google-analytics.com" +
+                    " https://www.googletagmanager.com",
+
+                  // Fonts — self-hosted only (add Google Fonts if needed)
+                  "font-src 'self' data:",
+
+                  // Media — self-hosted video/audio only
+                  "media-src 'self' https://www.youtube.com https://www.youtube-nocookie.com",
+
+                  // Block Flash, Java, etc.
+                  "object-src 'none'",
+
+                  // Restrict <base> tag
+                  "base-uri 'self'",
+
+                  // Prevent clickjacking
+                  "frame-ancestors 'self'",
+                ].join("; "),
+              },
+              // Security headers
+              {
+                key: "X-Content-Type-Options",
+                value: "nosniff",
+              },
+              {
+                key: "X-Frame-Options",
+                value: "SAMEORIGIN",
+              },
+              {
+                key: "Referrer-Policy",
+                value: "strict-origin-when-cross-origin",
+              },
+              {
+                key: "Permissions-Policy",
+                value: "camera=(), microphone=(), geolocation=()",
+              },
             ],
           },
-          // Next.js image optimizer — 24 h browser, 7 d CDN, stale-while-revalidate
+          {
+            source: "/:file(favicon\\.ico|favicon\\.png|apple-touch-icon\\.png)",
+            headers: [
+              { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+            ],
+          },
+          // Next.js image optimizer — 24h browser, 7d CDN
           {
             source: "/_next/image(.*)",
             headers: [
               {
                 key: "Cache-Control",
-                value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800",
+                value:
+                  "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800",
               },
             ],
           },
-          // Hashed build assets — immutable forever
+
+          // Hashed JS/CSS build assets — immutable forever
           {
             source: "/_next/static/(.*)",
             headers: [
-              { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, immutable",
+              },
             ],
           },
-          // Public static assets: images (webp, avif, png, jpg, svg), fonts, PDFs
+
+          // Self-hosted fonts — immutable forever
           {
             source: "/fonts/(.*)",
             headers: [
-              { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, immutable",
+              },
             ],
           },
+
+          // Public images folder — immutable forever
           {
             source: "/images/(.*)",
             headers: [
-              { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+              {
+                key: "Cache-Control",
+                value: "public, max-age=31536000, immutable",
+              },
             ],
           },
         ];

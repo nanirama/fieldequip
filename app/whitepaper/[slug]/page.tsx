@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { cache } from "react";
 import { notFound } from "next/navigation";
-import { PortableText } from "next-sanity";
 import type { PortableTextBlock } from "@portabletext/types";
 
 import BaseLayout from "@/src/components/BaseLayout";
+import FaqSchema from "@/src/components/FaqSchema";
 import FlexibleContent from "@/src/components/FlexibleContent";
 import { seoGenerateMetadata } from "@/src/components/Seo";
-import { loadWhitePaper, loadWhitePaperSlugs } from "@/src/sanity/loader/loadQuery";
+import { loadWhitePaper, loadWhitePaperSlugs, loadHeader } from "@/src/sanity/loader/loadQuery";
+import JsonLd from "@/src/components/JsonLd";
+import { buildBreadcrumbs, slugToLabel } from "@/lib/schema";
 import type { SanityImage } from "@/src/types/sanity-image";
-
+const getHeader = cache(loadHeader)
 type WhitePaperDetail = {
   _id?: string;
   name?: string;
@@ -39,9 +42,11 @@ type PageProps = {
 export async function generateStaticParams() {
   const result = await loadWhitePaperSlugs();
   const rows = (result.data as { slug?: string }[] | null | undefined) ?? [];
-  return rows
+  const params = rows
     .filter((r): r is { slug: string } => Boolean(r?.slug))
     .map((r) => ({ slug: r.slug }));
+  if (!params.length) return [{ slug: '__placeholder' }];
+  return params;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -74,17 +79,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function WhitePaperDetailPage({ params }: PageProps) {
   const { slug } = await params;
-  const result = await loadWhitePaper(slug);
+  //const result = await loadWhitePaper(slug);
+  const [result,  headerResult] = await Promise.all([
+      loadWhitePaper(slug),
+      getHeader()
+    ]);
   const data = result.data as WhitePaperDetail | null | undefined;
+  const settings = headerResult.data ?? {}
 
   if (!data?.name) {
     notFound();
   }
 
   return (
-    <BaseLayout layout="light">
-      <div className="md:absolute sm:-bottom-[20%] md:-bottom-[40%] md:left-[0%] sm:left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 md:w-[481px] md:h-[580px]" />
-      <div className="absolute sm:top-[0%] md:right-[10%] sm:right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 md:w-[432px] md:h-[450px] " />
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Whitepapers", href: "/whitepaper" },
+        { label: data.name || slugToLabel(slug), href: `/whitepaper/${slug}` },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
+      <div className="md:absolute sm:-bottom-[20%] md:-bottom-[40%] md:left-[0%] sm:left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-0 md:w-[481px] md:h-[580px]" />
+      <div className="absolute sm:top-[0%] md:right-[10%] sm:right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-0 md:w-[432px] md:h-[450px] " />
 
       <article className="mx-auto relative max-w-7xl px-4 pt-14 sm:pt-16 lg:pt-24">
         {/* <h1 className="max-w-4xl font-manrope text-3xl font-medium tracking-tight text-[#020210] sm:text-4xl lg:text-[2.25rem] lg:leading-tight">
@@ -102,6 +118,8 @@ export default async function WhitePaperDetailPage({ params }: PageProps) {
           <FlexibleContent data={{ sections: data.sections ?? [] }} page="whitepaper" />
         </div>
       </article>
-    </BaseLayout>
+      <FaqSchema sections={data.sections} />
+      </BaseLayout>
+    </>
   );
 }

@@ -39,7 +39,7 @@ export default function IntegrationsSection({ data }: { data?: IntegrationsSecti
             {heading ? (
               <h2
                 id="integrations-section-heading"
-                className="font-manrope text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl lg:text-[2.25rem] lg:leading-[1.12] xl:text-4xl"
+                className="text-[#020210] font-manrope text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl lg:text-[2.25rem] lg:leading-[1.12] xl:text-4xl"
               >
                 {heading}
               </h2>

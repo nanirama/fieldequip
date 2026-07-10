@@ -6,14 +6,14 @@ import Link from 'next/link'
 
 const BlogSingleCtaSection = () => {
   return (
-    <section className="w-full px-4 py-10 sm:pt-14">
-      <div className="relative mx-auto max-w-7xl bg-[#E9EDF2] rounded-2xl px-6 pt-10 sm:px-10 lg:px-12 lg:pt-16">
+    <section className="w-full py-10 sm:pt-14">
+      <div className="relative mx-auto max-w-7xl bg-[#E9EDF2] rounded-2xl">
         
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:gap-10 gap-6 lg:grid-cols-2 lg:items-end relative">
+        <div className="grid grid-cols-1 sm:gap-10 gap-6 lg:grid-cols-2 relative items-center">
           
           {/* ── Left Content ── */}
-          <div className="z-10 pb-10">
+          <div className="z-10 px-6 py-10 sm:px-10 lg:px-12 lg:pt-12">
             <h2 className="font-manrope text-balance text-3xl font-semibold leading-[1.15] tracking-tight sm:text-4xl lg:text-[2.25rem] lg:leading-[1.12] xl:text-[42px]">
               <span className="text-[#14b8a6]">A Clearer Way</span> to Run Field
               <br className="hidden sm:block" />
@@ -31,9 +31,9 @@ const BlogSingleCtaSection = () => {
           </div>
 
           {/* ── Right Image Card ── */}
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="relative flex justify-center lg:justify-end p-6">
             
-            <div className="w-[300px] lg:w-[400px] lg:absolute right-0 -bottom-0 shadow-2xl">
+            <div className="shadow-2xl">
               <Image
                 src={`/images/blogsingle-ctaimg.webp`} 
                 alt="Field Service Whitepaper"

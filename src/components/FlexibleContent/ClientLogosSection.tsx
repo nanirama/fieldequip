@@ -41,69 +41,131 @@ const ClientLogosSection = ({ data }: { data?: ClientLogosSectionData }) => {
 
     const settings = useMemo(
         () => ({
-        infinite: true,
-        slidesToShow: 9,
-        slidesToScroll: 1,
-        arrows: false,
-        dots: false,
-        autoplay: true,
-        autoplaySpeed: 0, // 🔥 key for continuous
-        speed: 5000, // 🔥 controls smooth flow
-        cssEase: "linear", // 🔥 no easing = constant speed
-        pauseOnHover: false,
-        responsive: [
-            {
-                breakpoint: 1024,
-                settings: { slidesToShow: 4 },
-            },
-            {
-                breakpoint: 768,
-                settings: { slidesToShow: 3 },
-            },
-            {
-                breakpoint: 480,
-                settings: { slidesToShow: 2 },
-            },
-        ],
-        onInit,
-        onReInit,
-        afterChange,
-    }),
+            infinite: true,
+            slidesToShow: 7,       // desktop ≥ 1024 px
+            slidesToScroll: 1,
+            arrows: false,
+            dots: false,
+            autoplay: true,
+            autoplaySpeed: 0,      // fire next transition immediately
+            speed: 5000,           // 5 s transition → smooth continuous feel
+            cssEase: "linear",     // constant speed, no easing
+            pauseOnHover: false,
+            swipe: false,          // ticker — swipe conflicts with iOS page scroll
+            draggable: false,
+            //waitForAnimate: false, // no micro-pause between cycles on Safari
+            responsive: [
+                // tablet  768 px – 1023 px → 5 items
+                { breakpoint: 1024, settings: { slidesToShow: 5 } },
+                // mobile  < 768 px → 2 items (covers all iPhones & narrow windows)
+                { breakpoint: 768,  settings: { slidesToShow: 3 } },
+                { breakpoint: 600,  settings: { slidesToShow: 2 } },
+            ],
+            onInit,
+            onReInit,
+            afterChange,
+        }),
+        [onInit, onReInit, afterChange],
+    );
+
+    const msettings = useMemo(
+        () => ({
+            infinite: true,
+            slidesToShow: 2,       // desktop ≥ 1024 px
+            slidesToScroll: 1,
+            arrows: false,
+            dots: false,
+            autoplay: true,
+            autoplaySpeed: 0,      // fire next transition immediately
+            speed: 5000,           // 5 s transition → smooth continuous feel
+            cssEase: "linear",     // constant speed, no easing
+            pauseOnHover: false,
+            swipe: false,          // ticker — swipe conflicts with iOS page scroll
+            draggable: false,
+            //waitForAnimate: false, // no micro-pause between cycles on Safari
+            responsive: [
+                // tablet  768 px – 1023 px → 5 items
+                { breakpoint: 1024, settings: { slidesToShow: 3 } },
+                // mobile  < 768 px → 2 items (covers all iPhones & narrow windows)
+                { breakpoint: 768,  settings: { slidesToShow: 3 } },
+                { breakpoint: 600,  settings: { slidesToShow: 2 } },
+            ],
+            onInit,
+            onReInit,
+            afterChange,
+        }),
         [onInit, onReInit, afterChange],
     );
 
     return (
         <>
             <div className="w-full sm:pt-16 pt-10 pb-4" ref={slickWrapRef}>
-                <Slider {...settings}>
-                    {logos.concat(logos).map((logo, index) => (
-                        <div key={index} className="px-4">
-                            <div className="flex items-center justify-center h-16">
-                                {logo.logo?.url ? (
-                                    logo.link ? (
-                                        <Link href={logo.link} target="_blank" rel="noreferrer noopener">
+                <div className="md:hidden block">
+                    <Slider {...msettings}>
+                        {logos.concat(logos).map((logo, index) =>
+                            logo.logo?.url ? (
+                                <div key={index} className="px-6">
+                                    <div className="flex items-center justify-center h-[110px]">
+                                        {logo.link ? (
+                                            <Link href={logo.link} target="_blank" rel="noreferrer noopener">
+                                                <Image
+                                                    src={logo.logo.url}
+                                                    alt={logo.logo.alt || "client logo"}
+                                                    width={160}
+                                                    height={90}
+                                                    style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
+                                                    className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
+                                                />
+                                            </Link>
+                                        ) : (
                                             <Image
                                                 src={logo.logo.url}
-                                                alt={logo.logo.alt || "client-logo"}
+                                                alt={logo.logo.alt || "client logo"}
                                                 width={160}
-                                                height={40}
-                                                className="object-contain grayscale opacity-70 hover:opacity-100 transition w-auto h-auto"
+                                                height={90}
+                                                style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
+                                                className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
                                             />
-                                        </Link>
-                                    ) : (
-                                        <Image
-                                            src={logo.logo.url}
-                                            alt={logo.logo.alt || "client-logo"}
-                                            width={160}
-                                            height={40}
-                                            className="object-contain grayscale opacity-70 hover:opacity-100 transition w-auto h-auto"
-                                        />
-                                    )
-                                ) : null}
-                            </div>
-                        </div>
-                    ))}
-                </Slider>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : null
+                        )}
+                    </Slider>
+                </div>
+                <div className="hidden sm:block">
+                    <Slider {...settings}>
+                        {logos.concat(logos).map((logo, index) =>
+                            logo.logo?.url ? (
+                                <div key={index} className="px-6">
+                                    <div className="flex items-center justify-center h-[110px]">
+                                        {logo.link ? (
+                                            <Link href={logo.link} target="_blank" rel="noreferrer noopener">
+                                                <Image
+                                                    src={logo.logo.url}
+                                                    alt={logo.logo.alt || "client logo"}
+                                                    width={160}
+                                                    height={90}
+                                                    style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
+                                                    className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
+                                                />
+                                            </Link>
+                                        ) : (
+                                            <Image
+                                                src={logo.logo.url}
+                                                alt={logo.logo.alt || "client logo"}
+                                                width={160}
+                                                height={90}
+                                                style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
+                                                className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            ) : null
+                        )}
+                    </Slider>
+                </div>
             </div>
         </>
     )

@@ -119,7 +119,7 @@ export default function CaseStudyChallenges({ challenges, caseStudyTitle }: Prop
                     height={imgHeight}
                     className="h-auto w-full object-contain"
                     sizes="(max-width: 1024px) 100vw, 50vw"
-                    quality={82}
+                    quality={80}
                     priority={false}
                     loading="lazy"
                     decoding="async"

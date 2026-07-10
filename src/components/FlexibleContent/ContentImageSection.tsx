@@ -158,7 +158,7 @@ export default function ContentImageSection({ data }: Props) {
             >
               <div
                 className={[
-                  "overflow-hidden rounded-2xl shadow-lg ring-1 max-w-200 w-full",
+                  "overflow-hidden max-w-200 w-full",
                   isDark ? "shadow-black/30 ring-white/10" : "shadow-slate-900/10 ring-slate-200/80",
                 ].join(" ")}
               >
@@ -172,6 +172,7 @@ export default function ContentImageSection({ data }: Props) {
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 800px"
                   placeholder={blurImageUrl ? "blur" : "empty"}
                   blurDataURL={blurImageUrl || undefined}
+                  quality={80}
                 />
               </div>
             </figure>
@@ -208,13 +209,20 @@ export default function ContentImageSection({ data }: Props) {
 
             {content && content.length > 0 ? (
               <div className="mt-6 max-w-xl sm:mt-7 cnt_strong">
+                <style>
+                  {`
+                  .cnt_strong p strong {
+                      color: #14B8A6;
+                    }
+                  `}
+                </style>
                 <PortableText value={content} components={pt} />
               </div>
             ) : null}
 
 
             {primaryLabel ? (
-              <div className="mt-2">
+              <div className="mt-5 mb-3">
                 <PrimaryCta
                   label={primaryLabel}
                   href={primaryHref || "#"}

@@ -83,7 +83,7 @@ function readBreadcrumb(page?: string): { label: string; href?: string }[] {
 function DynamicBreadcrumb({ page }: { page?: string }) {
   const breadcrumbItems = readBreadcrumb(page);
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 flex justify-center sm:mb-8">
+    <nav aria-label="Breadcrumb" className="relative z-10 mb-6 flex justify-center sm:mb-8">
       <ol className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-xs text-[#020210] sm:text-sm">
         {breadcrumbItems.map((item, idx) => {
           const isLast = idx === breadcrumbItems.length - 1;
@@ -97,13 +97,14 @@ function DynamicBreadcrumb({ page }: { page?: string }) {
                 </span>
               ) : null}
               {isLast || !item.href ? (
-                <span className="font-normal text-[#020210]" aria-current={isLast ? "page" : undefined}>
+                <span className="py-2 font-normal text-[#020210]" aria-current={isLast ? "page" : undefined}>
                   {item.label}
                 </span>
               ) : (
                 <Link
                   href={item.href}
-                  className="transition-colors hover:text-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                  className="cursor-pointer py-2 transition-colors hover:text-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                  style={{ touchAction: "manipulation" }}
                 >
                   {item.label}
                 </Link>
@@ -176,8 +177,8 @@ export default function PageHeroSection({ data, page }: Props) {
       className="relative w-full max-w-[1920px] mx-auto bg-white"
     >
 
-      <div className="md:absolute -bottom-[40%] md:left-[0%] left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 w-[481px] h-[580px] " />
-      <div className="absolute top-[0%] md:right-[10%] right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 w-[432px] h-[450px] " />
+      <div className="pointer-events-none md:absolute -bottom-[40%] md:left-[0%] left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 w-[481px] h-[580px] " />
+      <div className="pointer-events-none absolute top-[0%] md:right-[10%] right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 w-[432px] h-[450px] " />
 
       <div
         className={`relative mx-auto max-w-7xl px-4 pb-16 pt-28 text-center sm:pb-20 sm:pt-32 lg:pb-24 lg:pt-36 z-40 ${isCareers ? "border-b border-[#ecedf0]" : ""

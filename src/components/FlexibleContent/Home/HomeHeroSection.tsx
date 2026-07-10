@@ -42,6 +42,7 @@ import { cache } from "react";
 import { ButtonComponent } from "@/src/components/ButtonComponent";
 import { urlForImage } from "@/src/sanity/lib/utils";
 import ScrollMorphImage from "./ScrollMorphImage";
+import Image from "next/image";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type HeroSectionData = {
@@ -59,21 +60,21 @@ type HeroSectionData = {
     label?: string;
     url?: string;
     buttonType?:
-      | "primary"
-      | "secondary"
-      | "primaryBlack"
-      | "secondarywhite"
-      | "secondarytrnsparentWhiteBorder";
+    | "primary"
+    | "secondary"
+    | "primaryBlack"
+    | "secondarywhite"
+    | "secondarytrnsparentWhiteBorder";
   };
   secondaryButton?: {
     label?: string;
     url?: string;
     buttonType?:
-      | "primary"
-      | "secondary"
-      | "primaryBlack"
-      | "secondarywhite"
-      | "secondarytrnsparentWhiteBorder";
+    | "primary"
+    | "secondary"
+    | "primaryBlack"
+    | "secondarywhite"
+    | "secondarytrnsparentWhiteBorder";
   };
 };
 
@@ -81,12 +82,14 @@ type HeroSectionData = {
 const DEFAULT_HERO_ALT =
   "FieldEquip platform shown across laptop and mobile devices with scheduling and field operations dashboards";
 
-/**
- * FIX-3: Max width of the ScrollMorphImage container.
- * Matches imageWidth prop and the Sanity image URL width.
- * Was 1440 — reduced to 1000 to match max-w-[1000px] container.
- */
-const IMAGE_MAX_WIDTH = 1000;
+const IMAGE_MAX_WIDTH = 1280;
+/** Explicit 16:9 height — avoids Lighthouse "incorrect aspect ratio" warning.
+ *  Sanity metadata dimensions can differ from actual served pixels when the
+ *  source file was replaced after initial upload. Fixing both width+height in
+ *  the Sanity URL forces the CDN to crop-to-fit and guarantees the <img>
+ *  width/height attributes match the downloaded pixel dimensions exactly. */
+const IMAGE_HEIGHT_DESKTOP = 720; // 1280 × 720 = 16:9
+const IMAGE_HEIGHT_MOBILE  = 360; //  640 × 360 = 16:9
 
 // ── React Request Memoization ─────────────────────────────────────────────────
 /**
@@ -97,46 +100,27 @@ const buildHeroImageUrls = cache(
   (image: HeroSectionData["image"] | undefined) => {
     const builder = image ? urlForImage(image) : undefined;
 
+    // Force explicit 16:9 dimensions so Sanity CDN output matches <img> attrs.
     const imageUrl =
       builder
         ?.width(IMAGE_MAX_WIDTH)
+        ?.height(IMAGE_HEIGHT_DESKTOP)
         ?.format("webp")
         ?.fit("crop")
         ?.quality(85)
         ?.url() ?? "/images/hero-image.png";
 
-    // Mobile: 640 px wide — matches calc(100vw - 4rem) at ~375-640 px viewports
+    // Mobile: 640×360 (16:9) — sized for calc(100vw - 2rem) at 375–639px
     const imageUrlMobile =
       builder
         ?.width(640)
+        ?.height(IMAGE_HEIGHT_MOBILE)
         ?.format("webp")
         ?.fit("crop")
-        ?.quality(80)
+        ?.quality(75)
         ?.url() ?? imageUrl;
 
-    // 20×11 blurred placeholder — tiny enough to inline as blurDataURL
-    const blurImageUrl =
-      builder
-        ?.width(20)
-        ?.height(11)
-        ?.blur(20)
-        ?.format("webp")
-        ?.fit("crop")
-        ?.url() ?? undefined;
-
-    return { imageUrl, imageUrlMobile, blurImageUrl };
-  }
-);
-
-/**
- * FIX-5: Memoised portable-text → plain string.
- * Runs once per unique `blocks` reference per request, not per render.
- */
-const buildHeroImageDimensions = cache(
-  (image: HeroSectionData["image"] | undefined, maxWidth: number) => {
-    const w = image?.dimensions?.width;
-    const h = image?.dimensions?.height;
-    return w && h ? Math.round((maxWidth / w) * h) : undefined;
+    return { imageUrl, imageUrlMobile };
   }
 );
 
@@ -151,25 +135,38 @@ const getPortableTextPlain = cache(
 );
 
 // ── Component (pure RSC — no "use client") ────────────────────────────────────
-const HomeHeroSection = ({ data }: { data: HeroSectionData }) => {
-  
+const HomeHeroSection = ({ data }: { data?: HeroSectionData }) => {
   const heading =
     data?.heading ?? "One Platform. Every Field Operation. End to End.";
   const description =
     getPortableTextPlain(data?.description) ||
     "FieldEquip is a digital field service management platform that streamlines operations and boosts throughput, with predictive scheduling and automated job documentation doing the work your team used to do manually.";
 
-  const { imageUrl, imageUrlMobile, blurImageUrl } = buildHeroImageUrls(
-    data?.image
-  );
+  const { imageUrl, imageUrlMobile } = buildHeroImageUrls(data?.image);
   const imageAlt = data?.image?.alt?.trim() || DEFAULT_HERO_ALT;
-  const imageMaxHeight = buildHeroImageDimensions(data?.image, IMAGE_MAX_WIDTH);
 
   return (
+    <>
+    {/*
+      RSC-level LCP preloads — React 18 hoists <link rel="preload"> from
+      anywhere in the RSC tree into <head> before render-blocking CSS is
+      applied.  The media attribute ensures only the viewport-appropriate
+      image is downloaded: mobile gets the 640×360 WebP, desktop gets the
+      1280×720 WebP.  Two separate preloads each with a media guard is the
+      W3C-recommended pattern for <picture>-based responsive LCP images.
+      Sanity CDN URLs are used directly (bypass /_next/image) so there is
+      no cold-AVIF-encode delay on first visit.
+    */}
+    {/* @ts-expect-error — fetchpriority is valid HTML but absent from React 18 LinkHTMLAttributes */}
+    <link rel="preload" as="image" href={imageUrlMobile} type="image/webp" media="(max-width: 639px)" fetchpriority="high" />
+    {/* @ts-expect-error */}
+    <link rel="preload" as="image" href={imageUrl} type="image/webp" media="(min-width: 640px)" fetchpriority="high" />
+
     <section
-      className="min-h-screen relative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
+      className="md:min-h-screen-safe relative w-full bg-[linear-gradient(180deg,#162A4A_0%,#3C5B8D_40%,#6f8fc4_55%,#ffffff_70%)] mb-10 px-4 sm:px-6 overflow-hidden"
       aria-labelledby="hero-heading"
     >
+
       {/**
        * FIX-3: Decorative background — CSS background-image instead of
        * <Image fill>.  Reasons:
@@ -211,12 +208,14 @@ const HomeHeroSection = ({ data }: { data: HeroSectionData }) => {
         dangerouslySetInnerHTML={{
           __html: `
             .hero-bg-image {
-              background-image: url('/images/hero-bg.png');
               background-size: cover;
               background-position: top center;
             }
             @media (min-width: 768px) {
-              .hero-bg-image { background-size: 100% 100%; }
+              .hero-bg-image {
+                background-image: url('/images/hero-bg.png');
+                background-size: 100% 100%;
+              }
             }
           `,
         }}
@@ -238,7 +237,7 @@ const HomeHeroSection = ({ data }: { data: HeroSectionData }) => {
           {description}
         </p>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[14px]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3.5">
           {data?.primaryButton && (
             <ButtonComponent
               variant={data.primaryButton.buttonType ?? "primary"}
@@ -260,34 +259,20 @@ const HomeHeroSection = ({ data }: { data: HeroSectionData }) => {
         </div>
       </div>
 
-      {/* ── Hero screenshot — Client Component island ───────────────────── */}
-      {/**
-       * FIX-1: isLCP={true} — this image IS the Largest Contentful Paint
-       * element.  Without this, ScrollMorphImage defaulted to loading="lazy"
-       * + fetchPriority="low", meaning the browser deprioritised the fetch
-       * entirely until after hydration.  That is the primary cause of 4.8 s LCP.
-       *
-       * With isLCP={true}:
-       *   - priority={true}  → Next.js injects <link rel="preload"> in <head>
-       *   - fetchPriority="high" → tells the browser's network scheduler to
-       *     fetch this before non-critical resources
-       *   - loading={undefined} → disables lazy loading
-       *
-       * Only the ScrollMorphImage subtree hydrates on the client.
-       * The h1/p/buttons above remain static server HTML = lower TBT.
-       */}
-      <div className="relative z-30 mx-auto w-full">
-       <ScrollMorphImage
+      <div className="relative z-30 mx-auto sm:my-8 my-2 max-w-7xl w-full">
+        <ScrollMorphImage
           imageUrl={imageUrl}
           imageUrlMobile={imageUrlMobile}
           imageAlt={imageAlt}
           imageWidth={IMAGE_MAX_WIDTH}
-          imageHeight={imageMaxHeight}
-          blurImageUrl={blurImageUrl}
+          imageHeight={IMAGE_HEIGHT_DESKTOP}
+          mobileImageWidth={640}
+          mobileImageHeight={IMAGE_HEIGHT_MOBILE}
           isLCP
         />
       </div>
     </section>
+    </>
   );
 };
 

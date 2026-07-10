@@ -9,6 +9,8 @@ import BlogPostBody from "./BlogPostBody";
 import BlogSingleCtaSection from "../Blog/BlogSingleCtaSection";
 
 export type BlogPostArticleData = {
+  _id?: string;
+  _updatedAt?: string;
   title?: string;
   slug?: string;
   excerpt?: string;
@@ -73,25 +75,26 @@ export default function BlogPostArticle({ post }: Props) {
   const updated = formatLongDate(post.publishedAt);
 
   return (
-    <article className="w-full bg-white" itemScope itemType="https://schema.org/BlogPosting">
+    <article className="w-full bg-white" itemScope itemType="https://schema.org/Article">
       <meta itemProp="headline" content={title} />
       {post.publishedAt ? <meta itemProp="datePublished" content={post.publishedAt} /> : null}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 lg:pt-36 sm:pt-32 pt-28 ">
-        <nav aria-label="Breadcrumb" className="mx-auto max-w-full text-sm text-[#6B7280]">
+        <nav aria-label="Breadcrumb" className="relative z-10 mx-auto max-w-full text-sm text-[#6B7280]">
           <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <li>
               <Link
                 href="/blog"
-                className="font-medium text-[#14B8A6] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                className="cursor-pointer py-2 font-medium text-[#14B8A6] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                style={{ touchAction: "manipulation" }}
               >
                 Blog
               </Link>
             </li>
-            <li aria-hidden className="text-[#9CA3AF]">
+            <li aria-hidden className="py-2 text-[#9CA3AF]">
               /
             </li>
-            <li className="text-[#111827]" aria-current="page">
+            <li className="py-2 text-[#111827]" aria-current="page">
               {title}
             </li>
           </ol>
@@ -117,6 +120,7 @@ export default function BlogPostArticle({ post }: Props) {
                   height={56}
                   className="h-12 w-12 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
                   sizes="56px"
+                  quality={80}
                 />
               ) : (
                 <div
@@ -141,18 +145,20 @@ export default function BlogPostArticle({ post }: Props) {
           </div>
         </header>
         {heroUrl ? (
-        <figure className="relative md:rounded-2xl rounded-lg w-full h-full min-h-150 overflow-hidden">
-          <Image
-            src={heroUrl}
-            alt={heroAlt}
-            fill
-            className="h-full w-full max-h-full lg:max-h-full" 
-            sizes="(max-width: full) full, 1280px"
-            priority
-            placeholder={heroBlur ? "blur" : "empty"}
-            blurDataURL={heroBlur || undefined}
-          />
-        </figure>
+        <figure className="relative md:rounded-2xl rounded-lg w-full overflow-hidden">
+  <Image
+    src={heroUrl}
+    alt={heroAlt}
+    width={1280}
+    height={720}
+    className="w-full h-auto"
+    sizes="100vw"
+    priority
+    placeholder={heroBlur ? "blur" : "empty"}
+    blurDataURL={heroBlur || undefined}
+    quality={80}
+  />
+</figure>
       ) : null}
 
       </div>

@@ -5,8 +5,8 @@ import { PortableText, type PortableTextComponents } from "next-sanity";
 
 import type { SanityImage } from "@/src/types/sanity-image";
 import { urlForImage } from "@/src/sanity/lib/utils";
-
 import { ButtonComponent } from "@/src/components/ButtonComponent";
+import BlogFaqSection, { type BlogFaqSectionProps } from "@/src/components/Blog/BlogFaqSection";
 
 type ButtonBlockValue = {
   _type?: string;
@@ -17,6 +17,15 @@ type ButtonBlockValue = {
   href?: string;
   buttonType?: string;
   style?: string;
+};
+
+type TableValue = {
+  _type: "table";
+  rows?: Array<{
+    _key: string;
+    _type: "tableRow";
+    cells?: string[];
+  }>;
 };
 
 function mapButtonVariant(raw?: string): "primary" | "secondary" | "primaryBlack" | "secondarywhite" | "secondarytrnsparentWhiteBorder" {
@@ -48,6 +57,7 @@ function PortableImage({ value }: { value: SanityImage & { alt?: string } }) {
         sizes="(max-width: 768px) 100vw, 720px"
         placeholder={blur ? "blur" : "empty"}
         blurDataURL={blur || undefined}
+        quality={80}
       />
     </figure>
   );
@@ -61,10 +71,10 @@ function PortableButton({ value }: { value: ButtonBlockValue }) {
   if (!href) {
     return (
       <div className="my-6">
-      <ButtonComponent href={href} variant={variant} className="w-full min-h-12 sm:w-auto">
-        {label}
-      </ButtonComponent>
-    </div>
+        <ButtonComponent href={href} variant={variant} className="w-full min-h-12 sm:w-auto">
+          {label}
+        </ButtonComponent>
+      </div>
     );
   }
 
@@ -77,10 +87,55 @@ function PortableButton({ value }: { value: ButtonBlockValue }) {
   );
 }
 
+function PortableTable({ value }: { value: TableValue }) {
+  const rows = value.rows ?? [];
+  if (!rows.length) return null;
+  const [head, ...body] = rows;
+
+  return (
+    <div className="my-8 overflow-x-auto border border-slate-300">
+      <table className="min-w-full border-collapse text-base leading-relaxed text-[#374151]">
+        {head?.cells?.length ? (
+          <thead>
+            <tr className="bg-[#e8eaed]">
+              {head.cells.map((cell, i) => (
+                <th
+                  key={i}
+                  className="border border-slate-300 px-5 py-4 text-center font-bold text-[#020210]"
+                >
+                  {cell}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        ) : null}
+        <tbody className="bg-white">
+          {body.map((row) => (
+            <tr key={row._key}>
+              {(row.cells ?? []).map((cell, i) => (
+                <td
+                  key={i}
+                  className="border border-slate-300 px-5 py-4 text-center leading-relaxed text-[#374151]"
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 const components: PortableTextComponents = {
   types: {
     image: ({ value }) => <PortableImage value={value as SanityImage & { alt?: string }} />,
     button: ({ value }) => <PortableButton value={(value ?? {}) as ButtonBlockValue} />,
+    table: ({ value }) => <PortableTable value={value as TableValue} />,
+    portableFaqSection: ({ value }) => (
+      <BlogFaqSection {...(value as BlogFaqSectionProps)} />
+    ),
   },
   block: {
     h2: ({ children }) => (

@@ -57,7 +57,7 @@ const contentComponents: PortableTextComponents = {
               />
             </svg>
           </span>
-          <span className="flex-1">{children}</span>
+          <span className="flex-1 text-[#020210]/70">{children}</span>
         </li>
       ),
     },
@@ -82,7 +82,7 @@ export default function IndustriesHeroSection({ data }: Props) {
   const secondaryLabel = data?.secondaryButton?.label?.trim() || "";
 
   return (
-    <section className="w-full pt-28 lg:pt-32">
+    <section className="w-full pt-28 lg:pt-32 bg-white">
       <div className="mx-auto max-w-7xl border-b border-slate-300/70 px-4 pb-12 lg:pb-24">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div className="min-w-0">
@@ -136,6 +136,7 @@ export default function IndustriesHeroSection({ data }: Props) {
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
+                  quality={80}
                 />
               </div>
             </div>

@@ -16,8 +16,8 @@ type CaseStudiesSectionProps = {
 
 export default function CaseStudiesSection({ data }: CaseStudiesSectionProps) {
   const heading = data?.heading;
-  const caseStudies = data?.caseStudies;
 
+  const caseStudies = data?.caseStudies;
 
   if (data?.layout === "layout2") {
     return (

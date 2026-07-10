@@ -7,7 +7,6 @@ import type { CaseStudyMetricStat } from "@/src/components/CaseStudies/CaseStudy
 import type { CaseStudyCoverImage } from "@/src/components/CaseStudies/CaseStudyWideImage";
 import { urlForImage } from "@/src/sanity/lib/utils";
 
-const IMAGE_MAX = 1920;
 
 export type CaseStudyResultsCta = {
   label?: string | null;
@@ -121,19 +120,16 @@ export default function CaseStudyResults({ results, stats, caseStudyTitle }: Pro
   if (!hasImage && !hasContent && statItems.length === 0 && !hasButton) return null;
 
   let imgSrc: string | undefined;
-  let imgWidth = IMAGE_MAX;
-  let imgHeight = Math.round((IMAGE_MAX * 9) / 16);
+  let imgWidth = 1920;
+  let imgHeight = 1080;
 
   if (built) {
-    imgSrc = built.width(IMAGE_MAX).fit("max").quality(82).auto("format").url();
+    imgSrc = built.fit("max").quality(82).auto("format").url();
     const nw = image?.dimensions?.width;
     const nh = image?.dimensions?.height;
     if (nw && nh && nw > 0 && nh > 0) {
-      const scale = Math.min(1, IMAGE_MAX / nw);
-      imgWidth = Math.round(nw * scale);
-      imgHeight = Math.round(nh * scale);
-    } else {
-      imgHeight = Math.round(IMAGE_MAX / 2.5);
+      imgWidth = nw;
+      imgHeight = nh;
     }
   }
 
@@ -143,30 +139,29 @@ export default function CaseStudyResults({ results, stats, caseStudyTitle }: Pro
     (caseStudyTitle?.trim() ? `Results: ${caseStudyTitle.trim()}` : "Case study results");
 
   return (
-    <section className="bg-base text-white" aria-labelledby="case-study-results-heading">
-      {hasImage && imgSrc ? (
-        <div className="w-full">
-          <figure className="mx-auto w-full max-w-[1920px]">
-            <div className="relative w-full overflow-hidden bg-black/20">
-              <Image
-                src={imgSrc}
-                alt={alt}
-                width={imgWidth}
-                height={imgHeight}
-                className="h-auto w-full object-cover"
-                sizes="(max-width: 1920px) 100vw, 1920px"
-                quality={82}
-                priority={false}
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-                placeholder={lqip ? "blur" : "empty"}
-                blurDataURL={lqip}
-              />
-            </div>
-          </figure>
+    <>
+    {hasImage && imgSrc ? (
+      <div className="max-w-7xl mx-auto w-full px-4">
+        <figure className="my-4 flex justify-center">
+          <Image
+            src={imgSrc}
+            alt={alt}
+            width={imgWidth}
+            height={imgHeight}
+            className="h-auto sm:w-auto w-full sm:min-w-[600px]"
+            sizes="(max-width: 600px) 600px, (max-width: 1920px) 100vw, 1920px"
+            quality={80}
+            priority={false}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            placeholder={lqip ? "blur" : "empty"}
+            blurDataURL={lqip}
+          />
+        </figure>
         </div>
       ) : null}
+      <section className="bg-base text-white" aria-labelledby="case-study-results-heading">     
 
       <div className="mx-auto max-w-7xl px-6 py-14 sm:py-16 lg:px-8 lg:py-20">
         <h2
@@ -211,5 +206,7 @@ export default function CaseStudyResults({ results, stats, caseStudyTitle }: Pro
         )}
       </div>
     </section>
+    </>
+
   );
 }

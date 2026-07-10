@@ -27,10 +27,11 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
+
 /** Static mid-page CTA for case study detail. “Read more” scrolls to `CASE_STUDY_CONTENT_ANCHOR_ID` on the page. */
 export default function CaseStudyGrowthCtaBanner() {
   return (
-    <div className="my-6 py-12 border-slate-200/90 border-t border-slate-200/90">
+    <div className="my-6 py-12 border-t border-slate-200/90">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <p className="max-w-xl text-base font-medium leading-snug text-[#020210] sm:text-lg">
           Looking to achieve similar growth for your business?
@@ -41,7 +42,7 @@ export default function CaseStudyGrowthCtaBanner() {
             Schedule a Demo
           </ButtonComponent>
           <Link
-            href={`#${CASE_STUDY_CONTENT_ANCHOR_ID}`}
+            href={`/case-studies/`}
             className="inline-flex w-full items-center justify-center gap-2 rounded-[31px] border border-slate-300/90 bg-white px-5 py-3 text-sm font-semibold leading-[140%] text-[#020210] transition-colors duration-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#13A89E] focus-visible:ring-offset-2 sm:w-auto"
           >
             Read More About the Case Study
@@ -52,4 +53,3 @@ export default function CaseStudyGrowthCtaBanner() {
     </div>
   );
 }
-//<div className="my-6 border-t border-slate-200/90 pt-10 sm:my-7 sm:pt-12 border-2 border-blue-600"></div>

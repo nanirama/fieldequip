@@ -6,11 +6,11 @@ const organizationSchema = {
   url: "https://www.fieldequip.com",
   logo: {
     "@type": "ImageObject",
-    url: "https://www.fieldequip.com/images/logowhite.svg",
+    url: "https://www.fieldequip.com/images/logo-white.png",
     width: 300,
     height: 60,
   },
-  image: "https://www.fieldequip.com/images/logowhite.svg",
+  image: "https://www.fieldequip.com/images/logo-white.png",
   description:
     "FieldEquip is a cloud-based field service management (FSM) SaaS platform that connects field technicians, back-office teams, customers, and equipment through intelligent digital workflows — improving operational efficiency, accelerating cash flow, and enhancing customer satisfaction.",
   foundingDate: "2016",

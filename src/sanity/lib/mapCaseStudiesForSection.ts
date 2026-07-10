@@ -6,6 +6,7 @@ import type { CaseStudy as CaseStudyLayout2 } from "@/src/components/FlexibleCon
 /** Row shape from `caseStudiesQuery` in `queries.ts`. */
 export type CaseStudyListDocument = {
   _id: string;
+  orderBy?: number | null;
   name?: string;
   slug?: string;
   tags?: string[];
@@ -48,6 +49,7 @@ export function mapCaseStudyToLayout1(doc: CaseStudyListDocument): CaseStudyLayo
 
   return {
     slug: doc.slug,
+    orderBy: doc.orderBy ?? null,
     result: doc.industry?.trim() || "CASE STUDY",
     title: doc.name ?? "",
     desc1: paras[0] ?? "",
@@ -63,6 +65,7 @@ export function mapCaseStudyToLayout2(doc: CaseStudyListDocument): CaseStudyLayo
 
   return {
     slug: doc.slug,
+    orderBy: doc.orderBy ?? null,
     desc: desc || undefined,
     quote: quote || undefined,
     statistics: doc.statistics?.map((s) => ({ label: s.label, value: s.value })),

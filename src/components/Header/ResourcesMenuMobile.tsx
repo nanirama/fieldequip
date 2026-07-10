@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { memo, useCallback, useState } from "react";
 
@@ -79,7 +80,7 @@ function ResourcesMenuMobileComponent({ className = "", menuTitle, menuDescripti
 
       <div
         className={[
-          "fixed inset-x-0 top-0 z-50 max-h-dvh overflow-hidden bg-white transition-opacity duration-200",
+          "absolute inset-0 z-[60] bg-white transition-opacity duration-200 overflow-hidden",
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
         aria-hidden={!isMenuOpen}
@@ -87,11 +88,11 @@ function ResourcesMenuMobileComponent({ className = "", menuTitle, menuDescripti
         <nav
           id="resources-mobile-drawer"
           aria-label="Resources menu"
-          className="max-h-dvh overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
+          className="h-full max-h-full overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
         >
           <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-              <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
+              <Link href="/"><Image src="/images/logo.png" alt="FieldEquip" width={187} height={35} className="h-auto mb-4" /></Link>
               <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
               <p className="mt-3 max-w-[24ch] text-[16px] leading-[130%] text-[#020210]">{description}</p>
             </div>
@@ -116,6 +117,7 @@ function ResourcesMenuMobileComponent({ className = "", menuTitle, menuDescripti
                 <Link
                   href={href}
                   role="menuitem"
+                  prefetch={false}
                   className="inline-flex items-center gap-2 text-lg font-bold leading-tight text-[#020210] transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
                 >
                   {item.title}

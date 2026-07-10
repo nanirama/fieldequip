@@ -58,7 +58,7 @@ const CtaSection = ({ data, page  }: { data?: CtaSectionData, page?: string }) =
         : [
             {
                 _type: "block",
-                children: [{ _type: "span", text: "One partner. No hand-offs. Go-lives measured in weeks, not quarters." }],
+                children: [{ _type: "span", text: "One partner. No hand-offs. See your first workflows live in weeks. Fully deployed in a single quarter." }],
             },
         ];
 
@@ -138,7 +138,7 @@ const CtaSection = ({ data, page  }: { data?: CtaSectionData, page?: string }) =
                                         {buttons.map((button, index) => (
                                             <ButtonComponent
                                                 key={`${button.label}-${index}`}
-                                                href={button.url}
+                                                href={button?.url}
                                                 variant={button.buttonType || "primaryBlack"}
                                                 className="w-full shrink-0 sm:w-auto"
                                             >
@@ -156,7 +156,7 @@ const CtaSection = ({ data, page  }: { data?: CtaSectionData, page?: string }) =
                                         {buttons.map((button, index) => (
                                             <ButtonComponent
                                                 key={`${button.label}-${index}`}
-                                                href={button.url}
+                                                href={button?.url}
                                                 variant={button.buttonType || "primaryBlack"}
                                                 className="w-full shrink-0 sm:w-auto"
                                             >
@@ -176,7 +176,7 @@ const CtaSection = ({ data, page  }: { data?: CtaSectionData, page?: string }) =
                                 {buttons.map((button, index) => (
                                     <ButtonComponent
                                         key={`${button.label}-${index}`}
-                                        href={button.url}
+                                        href={button?.url}
                                         variant={button.buttonType || "primaryBlack"}
                                         className="w-full shrink-0 sm:w-auto"
                                     >

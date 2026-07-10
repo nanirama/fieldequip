@@ -90,6 +90,7 @@ export default function WhitePaperHeroSection({ data }: Props) {
                     placeholder={image?.lqip ? "blur" : "empty"}
                     blurDataURL={image?.lqip}
                     className="h-auto w-full object-cover"
+                    quality={80}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>

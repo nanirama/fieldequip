@@ -1,5 +1,45 @@
 [
     {
+      "source": "/main-industries/",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/main-industries",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/industrial-services-landing-page/",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/industrial-services-landing-page",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/oil-gas-asset-management-software",
+      "destination": "/oil-and-gas/",
+      "permanent": true
+    },
+    {
+      "source": "/oil-gas-asset-management-software/",
+      "destination": "/oil-and-gas/",
+      "permanent": true
+    },
+    {
+      "source": "/trust-security",
+      "destination": "/trust-security-certifications/",
+      "permanent": true
+    },
+    {
+      "source": "/trust-security/",
+      "destination": "/trust-security-certifications/",
+      "permanent": true
+    },
+    {
       "source": "/mobile-field-service-management-software/",
       "destination": "/field-service-management-software/",
       "permanent": true
@@ -51,7 +91,7 @@
     },
     {
       "source": "/chemical-inventory-management-software/",
-      "destination": "/field-inventory-management-software",
+      "destination": "/field-inventory-management-software/",
       "permanent": true
     },
     {
@@ -60,17 +100,22 @@
       "permanent": true
     },
     {
-      "source": "/industrial-services",
-      "destination": "/industrial-commercial-services/",
-      "permanent": true
-    },
-    {
       "source": "/equipment-maintenance-service",
       "destination": "/industrial-commercial-services/",
       "permanent": true
     },
     {
+      "source": "/equipment-maintenance-service/",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
       "source": "/power-utility",
+      "destination": "/energy-utilities/",
+      "permanent": true
+    },
+    {
+      "source": "/power-utility/",
       "destination": "/energy-utilities/",
       "permanent": true
     },
@@ -81,11 +126,21 @@
     },
     {
       "source": "/construction",
-      "destination": "/industrial-commercial-services/",    
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/construction/",
+      "destination": "/industrial-commercial-services/",
       "permanent": true
     },
     {
       "source": "/production-delivery-and-logistics",
+      "destination": "/industrial-commercial-services/",
+      "permanent": true
+    },
+    {
+      "source": "/production-delivery-and-logistics/",
       "destination": "/industrial-commercial-services/",
       "permanent": true
     },
@@ -96,6 +151,11 @@
     },
     {
       "source": "/fieldequip-videos",
+      "destination": "/videos-testimonials/",
+      "permanent": true
+    },
+    {
+      "source": "/fieldequip-videos/",
       "destination": "/videos-testimonials/",
       "permanent": true
     },
@@ -123,5 +183,50 @@
       "source": "/production-planning-oilfield-management/",
       "destination": "/oil-and-gas/",
       "permanent": true
-    }
+    },
+    {
+    "source": "/equipconnect/",
+    "destination": "/connected-field-service",
+    "statusCode": 301
+  },
+  {
+    "source": "/field-service-management/",
+    "destination": "/field-service-management-software/",
+    "statusCode": 301
+  },
+  {
+    "source": "/field-technician-scheduling-software/",
+    "destination": "/field-service-scheduling-dispatch-software/",
+    "statusCode": 301
+  },
+  {
+    "source": "/industrial-services/",
+    "destination": "/industrial-commercial-services/",
+    "statusCode": 301
+  },
+  {
+    "source": "/iot-equipment-monitoring-software/",
+    "destination": "/connected-field-service",
+    "statusCode": 301
+  },
+  {
+    "source": "/leadership-team/",
+    "destination": "/about-us/",
+    "statusCode": 301
+  },
+  {
+    "source": "/parts-inventory-management/",
+    "destination": "/field-inventory-management-software/",
+    "statusCode": 301
+  },
+  {
+    "source": "/pricing/",
+    "destination": "/get-a-quote/",
+    "statusCode": 301
+  },
+  {
+    "source": "/schedule-a-demo/",
+    "destination": "/demo/",
+    "statusCode": 301
+  }   
 ]

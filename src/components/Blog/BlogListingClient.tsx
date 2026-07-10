@@ -9,7 +9,7 @@ import BlogPostsGrid from "./BlogPostsGrid";
 import BlogSearchAutocomplete from "./BlogSearchAutocomplete";
 import type { BlogCategory, BlogPost } from "./types";
 
-const GRID_PAGE_SIZE = 9;
+const PAGE_SIZE = 30; // total posts per page including featured
 
 type Props = {
   pageTitle?: string;
@@ -43,17 +43,18 @@ export default function BlogListingClient({ pageTitle, posts, categories }: Prop
     );
   }, [posts, categoryId, deferredSearch]);
 
-  const featured = useMemo(() => filtered.slice(0, 3), [filtered]);
-  const gridSource = useMemo(() => filtered.slice(3), [filtered]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safeGridPage = Math.min(gridPage, totalPages);
 
-  const totalGridPages = Math.max(1, Math.ceil(gridSource.length / GRID_PAGE_SIZE));
-  const safeGridPage = Math.min(gridPage, totalGridPages);
+  // Slice the full 30-post window for the current page, then split into
+  // featured (first 3) + grid (remaining ≤27). Last page may have <30 posts.
+  const pageSlice = useMemo(() => {
+    const start = (safeGridPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safeGridPage]);
 
-  const gridSlice = useMemo(() => {
-    const page = safeGridPage;
-    const start = (page - 1) * GRID_PAGE_SIZE;
-    return gridSource.slice(start, start + GRID_PAGE_SIZE);
-  }, [gridSource, safeGridPage]);
+  const featured = useMemo(() => pageSlice.slice(0, 3), [pageSlice]);
+  const gridSlice = useMemo(() => pageSlice.slice(3), [pageSlice]);
 
   const suggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -80,10 +81,9 @@ export default function BlogListingClient({ pageTitle, posts, categories }: Prop
     setSearchQuery(v);
     setGridPage(1);
   };
-
   return (
     <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:py-12 lg:pt-32 lg:pb-16">
+      <div className="mx-auto max-w-7xl px-4 pt-24 pb-10 sm:py-12 lg:pt-32 lg:pb-16">
         {pageTitle?.trim() ? (
           <h1 className="font-manrope text-3xl font-semibold tracking-tight text-[#020210] sm:text-4xl">
             {pageTitle.trim()}
@@ -115,7 +115,7 @@ export default function BlogListingClient({ pageTitle, posts, categories }: Prop
 
         <BlogPostsGrid posts={gridSlice} />
 
-        <BlogPagination page={safeGridPage} totalPages={totalGridPages} onPageChange={setGridPage} />
+        <BlogPagination page={safeGridPage} totalPages={totalPages} onPageChange={setGridPage} />
       </div>
     </div>
   );

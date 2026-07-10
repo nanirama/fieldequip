@@ -47,7 +47,7 @@ const solutionPortableComponents: PortableTextComponents = {
       <h3 className="mt-8 font-manrope text-4xl mb-6 font-semibold tracking-tight text-[#020210] first:mt-0 sm:text-4xl">
         {children}
       </h3>
-    ),
+          ),
     normal: ({ children }) => (
       <p className="mb-4 text-base leading-relaxed text-[#020210] last:mb-0 sm:leading-relaxed">{children}</p>
     ),
@@ -137,7 +137,7 @@ export default function CaseStudySolution({ solutions, caseStudyTitle }: Props) 
                 height={imgHeight}
                 className="h-auto w-full object-contain"
                 sizes="(max-width: 1280px) 100vw, 1152px"
-                quality={82}
+                quality={80}
                 priority={false}
                 loading="lazy"
                 decoding="async"

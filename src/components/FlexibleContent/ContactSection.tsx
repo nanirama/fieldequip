@@ -108,12 +108,12 @@ export default function ContactSection({ data }: Props) {
         <div className="grid grid-cols-1 overflow-hidden gap-6 rounded-2xl lg:grid-cols-12">
 
           {/* ── Left: 4 cols — Sanity content ── */}
-          <div className="relative flex flex-col md:order-first order-last globe_contact justify-between rounded-xl overflow-hidden bg-[#13a89e] lg:col-span-4 p-5 lg:p-6">
+          <div className="relative flex flex-col order-first globe_contact justify-between rounded-xl overflow-hidden bg-[#13a89e] lg:col-span-4 p-5 lg:p-6">
             {/* Top content */}
             <div className="relative z-10 pt-5 ps-4">
-              <h2 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
                 {heading}
-              </h2>
+              </h1>
 
               <ul className="mt-8 space-y-1.5">
                 {address && (
@@ -174,7 +174,7 @@ export default function ContactSection({ data }: Props) {
 
           {/* ── Right: 8 cols — HubSpot form ── */}
           <div className="lg:col-span-8">
-            <HubSpotForm title="Schedule Your Demo" />
+            <HubSpotForm title="Contact Us" />
           </div>
 
         </div>

@@ -73,16 +73,22 @@ function TickIcon() {
   );
 }
 
-export default function ComparisonSection({ data }: { data?: ComparisonSectionData }) {
+export default function ComparisonSection({ data, page }: { data?: ComparisonSectionData, page?: string }) {
   const sectionTag = data?.sectionTag?.trim();
   const heading = data?.heading?.trim() ?? "";
   const subheading = data?.subheading?.trim();
+  const pageData = page ? (() => { try { return JSON.parse(page); } catch { return { page }; } })() : null;
 
   const items =
     data?.items?.filter((item) => item?.beforeText?.trim() || item?.afterText?.trim()) ?? [];
   const primaryButton = data?.primaryButton;
-
-  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  let primaryHref = ''
+  //const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  if(pageData?.page==='get-a-quote'){
+    primaryHref = '#get-quote'
+  } else {
+    primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  }
   const primaryLabel = primaryButton?.label?.trim() || (primaryHref ? "Schedule a Demo" : "");
 
   return (

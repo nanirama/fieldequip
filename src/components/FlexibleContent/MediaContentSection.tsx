@@ -25,6 +25,9 @@ const ptComponents: PortableTextComponents = {
       return (
         <Link
           href={href}
+          prefetch={false}
+          target={newTab ? '_blank' : undefined}
+          rel={newTab ? 'noopener noreferrer' : undefined}
           className="text-[#13A89E] underline underline-offset-2 hover:text-[#0d9488] transition-colors"
         >
           {children}
@@ -107,7 +110,7 @@ export default function MediaContentSection({ data }: Props) {
 
             const imageUrl = (item?.image &&
               urlForImage(item.image)
-                ?.width(780)
+                ?.width(1100)
                 ?.format('webp')
                 ?.fit('crop')
                 ?.quality(85)
@@ -188,13 +191,30 @@ export default function MediaContentSection({ data }: Props) {
                       className={`mt-4 prose max-w-none text-base  media_content ${isDark ? 'prose-invert text-white/70' : 'text-black'
                         }`}
                     >
+                      <style>
+                        {`
+                        .media_content p {
+                          margin-bottom: 20px;
+                        }
+                          .media_content ul {
+                            margin: 10px 0;
+                            list-style-position: inside;
+                          }
+
+                          .media_content ul li {
+                            list-style-type: disc;
+                            list-style-position: inside;
+                          }
+                        `}
+                      </style>
                       <PortableText value={item.description} components={ptComponents} />
                     </div>
                   )}
 
                   {item.linkText && (
                     <Link
-                      href={item.linkUrl ? `/${item.linkUrl}` : '#'}
+                      prefetch={false}
+                      href={item.linkUrl ? `/${item.linkUrl}/` : '#'}
                       className="mt-2 inline-flex text-base flex-row gap-3 items-center text-[#13A89E] underline focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                     >
                       {item.linkText}

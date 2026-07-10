@@ -1,9 +1,14 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import BaseLayout from "@/src/components/BaseLayout";
 import BlogPostArticle from "@/src/components/Blog/BlogPostArticle";
 import type { BlogPostArticleData } from "@/src/components/Blog/BlogPostArticle";
+import BlogPostJsonLd from "@/src/components/Blog/JsonLd";
+import JsonLd from "@/src/components/JsonLd";
+import { buildBreadcrumbs, slugToLabel } from "@/lib/schema";
+import FaqSchema from "@/src/components/FaqSchema";
 import FlexibleContent from "@/src/components/FlexibleContent";
 import LegalPageContent from "@/src/components/LegalPageContent";
 import { seoGenerateMetadata } from "@/src/components/Seo";
@@ -11,6 +16,7 @@ import {
   loadBlogPost,
   loadConversionPage,
   loadConversionPageSlugs,
+  loadHeader,
   loadIndustry,
   loadIndustrySlugs,
   loadLegalPage,
@@ -29,6 +35,7 @@ type SlugPageProps = {
 type ContentDoc = {
   title?: string;
   slug?: string;
+  effectiveDate?: string;
   parent?: {
     title?: string;
     slug?: string;
@@ -47,94 +54,61 @@ type BreadcrumbItem = {
   href?: string;
 };
 
-type FaqSchemaItem = {
-  question: string;
-  answer: string;
+type PostDoc = BlogPostArticleData & {
+  seo?: { metaTitle?: string; metaDescription?: string; metaImage?: string };
 };
 
-function portableTextToPlainText(value: unknown): string {
-  const parts: string[] = [];
+type SlugMatch =
+  | { type: "page"; page: ContentDoc }
+  | { type: "legal"; legalPage: ContentDoc }
+  | { type: "product"; product: ContentDoc }
+  | { type: "post"; post: PostDoc }
+  | { type: "industry"; industry: ContentDoc }
+  | { type: "conversion"; conversionPage: ContentDoc };
 
-  const visit = (node: unknown) => {
-    if (typeof node === "string") {
-      parts.push(node);
-      return;
-    }
-    if (!node || typeof node !== "object") return;
-    if (Array.isArray(node)) {
-      node.forEach(visit);
-      return;
-    }
+const getHeader = cache(loadHeader)
 
-    const asRecord = node as Record<string, unknown>;
-    if (typeof asRecord.text === "string") {
-      parts.push(asRecord.text);
-    }
+// React.cache deduplicates this across generateMetadata + SlugPage within the same
+// render cycle. All 6 loaders fire in parallel — each has its own 'use cache'
+// boundary so Sanity is only hit once per slug per cache period regardless of type.
+const loadSlugContent = cache(async (slug: string): Promise<SlugMatch | null> => {
+  const [
+    productResult,
+    pageResult,
+    legalResult,
+    postResult,
+    industryResult,
+    conversionResult,
+  ] = await Promise.all([
+    loadProduct(slug),
+    loadPage(slug),
+    loadLegalPage(slug),
+    loadBlogPost(slug),
+    loadIndustry(slug),
+    loadConversionPage(slug),
+  ]);
 
-    if (Array.isArray(asRecord.children)) {
-      asRecord.children.forEach(visit);
-    }
-    if (Array.isArray(asRecord.content)) {
-      asRecord.content.forEach(visit);
-    }
-    if (Array.isArray(asRecord.answer)) {
-      asRecord.answer.forEach(visit);
-    }
-  };
+  // Priority resolution — order matches the original waterfall priority
+  const product = productResult.data as ContentDoc | null | undefined;
+  if (product) return { type: "product", product };
 
-  visit(value);
-  return parts.join(" ").replace(/\s+/g, " ").trim();
-}
+  const page = pageResult.data as ContentDoc | null | undefined;
+  if (page) return { type: "page", page };
 
-function extractFaqSchemaItems(sections: unknown[] | undefined): FaqSchemaItem[] {
-  if (!Array.isArray(sections) || sections.length === 0) return [];
+  const legalPage = legalResult.data as ContentDoc | null | undefined;
+  if (legalPage) return { type: "legal", legalPage };
 
-  const out: FaqSchemaItem[] = [];
-  for (const section of sections) {
-    if (!section || typeof section !== "object") continue;
-    const sectionRecord = section as Record<string, unknown>;
-    if (sectionRecord._type !== "faqSection") continue;
+  const post = postResult.data as PostDoc | null | undefined;
+  if (post?.slug) return { type: "post", post };
 
-    const sectionFaqs = sectionRecord.faqs;
-    if (!Array.isArray(sectionFaqs)) continue;
+  const industry = industryResult.data as ContentDoc | null | undefined;
+  if (industry) return { type: "industry", industry };
 
-    for (const faq of sectionFaqs) {
-      if (!faq || typeof faq !== "object") continue;
-      const faqRecord = faq as Record<string, unknown>;
-      const question =
-        typeof faqRecord.question === "string" ? faqRecord.question.trim() : "";
-      const answerText = portableTextToPlainText(faqRecord.answer);
-      if (!question || !answerText) continue;
-      out.push({ question, answer: answerText });
-    }
-  }
+  const conversionPage = conversionResult.data as ContentDoc | null | undefined;
+  if (conversionPage) return { type: "conversion", conversionPage };
 
-  return out;
-}
-
-function FAQSchema({ faqs }: { faqs: FaqSchemaItem[] }) {
-  if (!faqs.length) return null;
-
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-    />
-  );
-}
+  return null;
+});
 
 export async function generateStaticParams() {
   const [productSlugs, pageSlugs, postSlugs, legalSlugs, industrySlugs, conversionSlugs] = await Promise.all([
@@ -145,12 +119,12 @@ export async function generateStaticParams() {
     loadIndustrySlugs(),
     loadConversionPageSlugs(),
   ]);
-  const productRows = productSlugs.data as { slug: string }[] | null | undefined;
-  const pageRows = pageSlugs.data as { slug: string }[] | null | undefined;
-  const postRows = postSlugs.data as { slug: string }[] | null | undefined;
-  const legalRows = legalSlugs.data as { slug: string }[] | null | undefined;
-  const industryRows = industrySlugs.data as { slug: string }[] | null | undefined;
-  const conversionRows = conversionSlugs.data as { slug: string }[] | null | undefined;
+  const productRows = productSlugs as { slug: string }[] | null | undefined;
+  const pageRows = pageSlugs as { slug: string }[] | null | undefined;
+  const postRows = postSlugs as { slug: string }[] | null | undefined;
+  const legalRows = legalSlugs as { slug: string }[] | null | undefined;
+  const industryRows = industrySlugs as { slug: string }[] | null | undefined;
+  const conversionRows = conversionSlugs as { slug: string }[] | null | undefined;
   const unique = new Set<string>();
   for (const row of [
     ...(pageRows ?? []),
@@ -162,29 +136,41 @@ export async function generateStaticParams() {
   ]) {
     if (row?.slug) unique.add(row.slug);
   }
-  if (!unique.size) return [];
+  // cacheComponents forbids returning []. If Sanity is unreachable at this
+  // moment the placeholder keeps the build valid; it will hit notFound().
+  if (!unique.size) return [{ slug: '__placeholder' }];
   return [...unique].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: SlugPageProps): Promise<Metadata> {
   const { slug } = await params;
+  const match = await loadSlugContent(slug);
 
-  const pageResult = await loadPage(slug);
-  const cmsPage = pageResult.data as ContentDoc | null | undefined;
+  if (!match) {
+    return seoGenerateMetadata({ title: slug, description: "", url: `/${slug}` });
+  }
 
-  if (cmsPage) {
+  if (match.type === "product") {
+    const { product } = match;
     return seoGenerateMetadata({
-      title: cmsPage.seo?.metaTitle || cmsPage.title || slug,
-      description: cmsPage.seo?.metaDescription || "",
+      title: product.seo?.metaTitle || product.title || slug,
+      description: product.seo?.metaDescription || "",
       url: `/${slug}`,
-      imageUrl: cmsPage.seo?.metaImage,
+      imageUrl: product.seo?.metaImage,
+    });
+  }
+  if (match.type === "page") {
+    const { page } = match;
+    return seoGenerateMetadata({
+      title: page.seo?.metaTitle || page.title || slug,
+      description: page.seo?.metaDescription || "",
+      url: `/${slug}`,
+      imageUrl: page.seo?.metaImage,
     });
   }
 
-  const legalResult = await loadLegalPage(slug);
-  const legalPage = legalResult.data as ContentDoc | null | undefined;
-
-  if (legalPage) {
+  if (match.type === "legal") {
+    const { legalPage } = match;
     return seoGenerateMetadata({
       title: legalPage.seo?.metaTitle || legalPage.title || slug,
       description: legalPage.seo?.metaDescription || "",
@@ -193,24 +179,10 @@ export async function generateMetadata({ params }: SlugPageProps): Promise<Metad
     });
   }
 
-  const productResult = await loadProduct(slug);
-  const product = productResult.data as ContentDoc | null | undefined;
+  
 
-  if (product) {
-    return seoGenerateMetadata({
-      title: product.seo?.metaTitle || product.title || slug,
-      description: product.seo?.metaDescription || "",
-      url: `/${slug}`,
-      imageUrl: product.seo?.metaImage,
-    });
-  }
-
-  const postResult = await loadBlogPost(slug);
-  const post = postResult.data as BlogPostArticleData & {
-    seo?: { metaTitle?: string; metaDescription?: string; metaImage?: string };
-  } | null | undefined;
-
-  if (post) {
+  if (match.type === "post") {
+    const { post } = match;
     return seoGenerateMetadata({
       title: post.seo?.metaTitle || post.title || slug,
       description: post.seo?.metaDescription || "",
@@ -219,10 +191,8 @@ export async function generateMetadata({ params }: SlugPageProps): Promise<Metad
     });
   }
 
-  const industryResult = await loadIndustry(slug);
-  const industry = industryResult.data as ContentDoc | null | undefined;
-
-  if (industry) {
+  if (match.type === "industry") {
+    const { industry } = match;
     return seoGenerateMetadata({
       title: industry.seo?.metaTitle || industry.title || slug,
       description: industry.seo?.metaDescription || "",
@@ -231,10 +201,8 @@ export async function generateMetadata({ params }: SlugPageProps): Promise<Metad
     });
   }
 
-  const conversionResult = await loadConversionPage(slug);
-  const conversionPage = conversionResult.data as ContentDoc | null | undefined;
-
-  if (conversionPage) {
+  if (match.type === "conversion") {
+    const { conversionPage } = match;
     return seoGenerateMetadata({
       title: conversionPage.seo?.metaTitle || conversionPage.title || slug,
       description: conversionPage.seo?.metaDescription || "",
@@ -243,132 +211,168 @@ export async function generateMetadata({ params }: SlugPageProps): Promise<Metad
     });
   }
 
-  return seoGenerateMetadata({
-    title: slug,
-    description: "",
-    url: `/${slug}`,
-  });
+  return seoGenerateMetadata({ title: slug, description: "", url: `/${slug}` });
 }
 
 export default async function SlugPage({ params }: SlugPageProps) {
   const { slug } = await params;
+  const [match, headerResult] = await Promise.all([loadSlugContent(slug), getHeader()])
+  const settings = headerResult.data ?? {}
 
-  const pageResult = await loadPage(slug);
-  const cmsPage = pageResult.data as ContentDoc | null | undefined;
+  if (!match) {
+    notFound();
+  }
 
-  const pageBreadcrumb: { breadcrumb: BreadcrumbItem[] } = {
-    breadcrumb: [
+  if (match.type === "product") {
+    const product = match.product;
+    const productParent = product?.parent;
+    const secondProductCrumb: BreadcrumbItem =
+      productParent?.title
+        ? {
+            label: productParent.title,
+            href: productParent.slug ? `/${productParent.slug}` : undefined,
+          }
+        : { label: "Company", href: "/about-us" };
+
+    const productBreadcrumb: { breadcrumb: BreadcrumbItem[] } = {
+      breadcrumb: [
+        { label: "Home", href: "/" },
+        secondProductCrumb,
+        { label: product?.title || slug },
+      ],
+    };
+    const productCrumbs = [
       { label: "Home", href: "/" },
-      { label: "Company", href: "/about-us" },
-      { label: cmsPage?.title || slug },
-    ],
-  };
-
-  if (cmsPage) {
-    const faqSchemaFaqs = extractFaqSchemaItems(cmsPage.sections);
+      ...(productParent?.title
+        ? [{ label: productParent.title, href: productParent.slug ? `/${productParent.slug}` : "/about-us" }]
+        : []),
+      { label: product.title || slugToLabel(slug), href: `/${slug}` },
+    ];
     return (
-      <BaseLayout>
-        <FlexibleContent
-          data={{ sections: cmsPage.sections as unknown[] }}
-          page={JSON.stringify(pageBreadcrumb)}
-        />
-        <FAQSchema key={slug} faqs={faqSchemaFaqs} />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs(productCrumbs)} />
+        <BaseLayout layout="light" settings={settings}>
+          <FlexibleContent
+            data={{ sections: product.sections as unknown[] }}
+            page={JSON.stringify(productBreadcrumb)}
+          />
+          <FaqSchema sections={product.sections} />
+        </BaseLayout>
+      </>
     );
   }
 
-  const legalResult = await loadLegalPage(slug);
-  const legalPage = legalResult.data as ContentDoc | null | undefined;
-
-  if (legalPage) {
+  if (match.type === "page") {
+    const cmsPage = match.page;
+    const pageBreadcrumb: { page: string; breadcrumb: BreadcrumbItem[] } = {
+      page: slug,
+      breadcrumb: [
+        { label: "Home", href: "/" },
+        { label: "Company", href: "/about-us" },
+        { label: cmsPage?.title || slug },
+      ],
+    };
     return (
-      <BaseLayout layout="light">
-        <LegalPageContent title={legalPage.title ?? slug} content={legalPage.content as import("@portabletext/types").PortableTextBlock[] | undefined} />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs([
+          { label: "Home", href: "/" },
+          { label: cmsPage.title || slugToLabel(slug), href: `/${slug}` },
+        ])} />
+        <BaseLayout settings={settings}>
+          <FlexibleContent
+            data={{ sections: cmsPage.sections as unknown[] }}
+            page={JSON.stringify(pageBreadcrumb)}
+          />
+          <FaqSchema sections={cmsPage.sections} />
+        </BaseLayout>
+      </>
     );
   }
 
-  const productResult = await loadProduct(slug);
-  const product = productResult.data as ContentDoc | null | undefined;
-  const productParent = product?.parent;
-  const secondProductCrumb: BreadcrumbItem =
-    productParent?.title
-      ? {
-          label: productParent.title,
-          href: productParent.slug ? `/${productParent.slug}` : undefined,
-        }
-      : { label: "Company", href: "/about-us" };
-
-  const productBreadcrumb: { breadcrumb: BreadcrumbItem[] } = {
-    breadcrumb: [
-      { label: "Home", href: "/" },
-      secondProductCrumb,
-      { label: product?.title || slug },
-    ],
-  };
-
-  if (product) {
-    const faqSchemaFaqs = extractFaqSchemaItems(product.sections);
+  if (match.type === "legal") {
+    const legalPage = match.legalPage;
     return (
-      <BaseLayout layout="light">
-        <FlexibleContent
-          data={{ sections: product.sections as unknown[] }}
-          page={JSON.stringify(productBreadcrumb)}
-        />
-        <FAQSchema key={slug} faqs={faqSchemaFaqs} />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs([
+          { label: "Home", href: "/" },
+          { label: legalPage.title || slugToLabel(slug), href: `/${slug}` },
+        ])} />
+        <BaseLayout layout="light" settings={settings}>
+          <LegalPageContent
+            title={legalPage.title ?? slug}
+            effectiveDate={legalPage.effectiveDate}
+            content={legalPage.content as import("@portabletext/types").PortableTextBlock[] | undefined}
+          />
+        </BaseLayout>
+      </>
     );
   }
 
-  const postResult = await loadBlogPost(slug);
-  const post = postResult.data as BlogPostArticleData | null | undefined;
+  
 
-  if (post?.slug) {
+  if (match.type === "post") {
+    const post = match.post;
     return (
-      <BaseLayout layout="light">
-        <BlogPostArticle post={post} />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs([
+          { label: "Home", href: "/" },
+          { label: "Blog", href: "/blog" },
+          { label: post.title || slugToLabel(slug), href: `/${slug}` },
+        ])} />
+        <BaseLayout layout="light" settings={settings}>
+          <BlogPostJsonLd post={post} slug={slug} />
+          <BlogPostArticle post={post} />
+        </BaseLayout>
+      </>
     );
   }
 
-  const industryResult = await loadIndustry(slug);
-  const industry = industryResult.data as ContentDoc | null | undefined;
-
-  if (industry) {
-    const faqSchemaFaqs = extractFaqSchemaItems(industry.sections);
+  if (match.type === "industry") {
+    const industry = match.industry;
     return (
-      <BaseLayout layout="light">
-        <FlexibleContent
-          data={{ sections: industry.sections as unknown[] }}
-          page={JSON.stringify({
-            breadcrumb: [
-              { label: "Home", href: "/" },
-              { label: industry.title || slug },
-            ],
-          })}
-        />
-        <FAQSchema key={slug} faqs={faqSchemaFaqs} />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs([
+          { label: "Home", href: "/" },
+          { label: industry.title || slugToLabel(slug), href: `/${slug}` },
+        ])} />
+        <BaseLayout layout="light" settings={settings}>
+          <FlexibleContent
+            data={{ sections: industry.sections as unknown[] }}
+            page={JSON.stringify({
+              breadcrumb: [
+                { label: "Home", href: "/" },
+                { label: industry.title || slug },
+              ],
+            })}
+          />
+          <FaqSchema sections={industry.sections} />
+        </BaseLayout>
+      </>
     );
   }
 
-  const conversionResult = await loadConversionPage(slug);
-  const conversionPage = conversionResult.data as ContentDoc | null | undefined;
-
-  if (conversionPage) {
+  if (match.type === "conversion") {
+    const conversionPage = match.conversionPage;
     return (
-      <BaseLayout layout="light">
-        <FlexibleContent
-          data={{ sections: conversionPage.sections as unknown[] }}
-          page={JSON.stringify({
-            page: slug,
-            breadcrumb: [
-              { label: "Home", href: "/" },
-              { label: conversionPage.title || slug },
-            ],
-          })}
-        />
-      </BaseLayout>
+      <>
+        <JsonLd schema={buildBreadcrumbs([
+          { label: "Home", href: "/" },
+          { label: conversionPage.title || slugToLabel(slug), href: `/${slug}` },
+        ])} />
+        <BaseLayout layout="light" settings={settings}>
+          <FlexibleContent
+            data={{ sections: conversionPage.sections as unknown[] }}
+            page={JSON.stringify({
+              page: slug,
+              breadcrumb: [
+                { label: "Home", href: "/" },
+                { label: conversionPage.title || slug },
+              ],
+            })}
+          />
+          <FaqSchema sections={conversionPage.sections} />
+        </BaseLayout>
+      </>
     );
   }
 

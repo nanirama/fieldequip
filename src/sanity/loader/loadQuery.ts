@@ -1,11 +1,9 @@
 import 'server-only'
-
-import * as queryStore from '@sanity/react-loader'
-import { draftMode } from 'next/headers'
-
+import { cacheTag, cacheLife } from 'next/cache'
 import { client } from '@/src/sanity/lib/client'
 import {
   homeQuery,
+  headerQuery,
   integrationsQuery,
   integrationsSlugsQuery,
   allIntegrationsQuery,
@@ -33,248 +31,153 @@ import {
   legalLandingPageSlugsQuery,
   industriesQuery,
   industriesSlugsQuery,
+  allIndustriesQuery,
   productQuery,
   productSlugsQuery,
+  allProductsQuery,
   conversionPagesQuery,
   conversionPagesSlugsQuery,
   settingsQuery,
+  allFaqsQuery,
 } from '@/src/sanity/lib/queries'
 import type { CaseStudyListDocument } from '@/src/sanity/lib/mapCaseStudiesForSection'
-import { token } from '@/src/sanity/lib/token'
 
-const serverClient = client.withConfig({
-  token,
-  // Enable stega in Vercel preview deployments.
-  stega: process.env.VERCEL_ENV === 'preview',
-})
+// ── Core cache function ───────────────────────────────────────────────────────
 
-/**
- * Ensure server-side fetching for production data loading.
- */
-queryStore.setServerClient(serverClient)
-
-const usingCdn = serverClient.config().useCdn
-
-type LoadQueryOptions = NonNullable<Parameters<typeof queryStore.loadQuery>[2]> & {
-  /**
-   * Set true when calling from `generateStaticParams` or other build-time code.
-   * Avoids `draftMode()`, which Next.js does not allow outside a request.
-   */
-  staticGeneration?: boolean
-}
-
-export async function loadQuery(
+async function cachedFetch(
   query: string,
-  params: Parameters<typeof queryStore.loadQuery>[1] = {},
-  options: LoadQueryOptions = {},
-) {
-  const { staticGeneration, ...loaderOptions } = options
-
-  const draft = staticGeneration ? { isEnabled: false as const } : await draftMode()
-
-  const perspective =
-    loaderOptions.perspective ?? (draft.isEnabled ? 'previewDrafts' : 'published')
-
-  const stega = loaderOptions.stega !== undefined ? loaderOptions.stega : draft.isEnabled
-
-  // CDN mode (no webhook secret): short time-based ISR – CDN provides freshness.
-  // Webhook mode (no CDN): cache indefinitely and rely on revalidateTag from the
-  // /api/revalidate route handler to purge stale entries on content changes.
-  // Fall back to 3600s if no tags are present so we never serve infinitely-stale content.
-  const hasTags =
-    Array.isArray(loaderOptions.next?.tags) && loaderOptions.next.tags.length > 0
-  const revalidate: NextFetchRequestConfig['revalidate'] = usingCdn
-    ? 60
-    : hasTags
-      ? false
-      : 3600
-
-  return queryStore.loadQuery(query, params, {
-    ...loaderOptions,
-    next: {
-      revalidate,
-      ...(loaderOptions.next || {}),
-    },
-    perspective,
-    stega,
-  })
+  params: Record<string, unknown>,
+  tags: string[],
+): Promise<unknown> {
+  'use cache'
+  cacheTag(...tags)
+  cacheLife({ stale: 86400, revalidate: 3600, expire: 604800 })
+  return client.fetch(query, params)
 }
 
-/**
- * Home singleton loader.
- */
-export function loadHome() {
-  return loadQuery(homeQuery, {}, { next: { tags: ['home'] } })
+async function cached(
+  query: string,
+  params: Record<string, unknown>,
+  tags: string[],
+): Promise<{ data: unknown }> {
+  const data = await cachedFetch(query, params, tags)
+  return { data }
 }
 
-export function loadProduct(slug: string) {
-  return loadQuery(productQuery, { slug }, { next: { tags: ['product', `product:${slug}`] } })
-}
+// ── Public loaders ────────────────────────────────────────────────────────────
 
-export function loadProductSlugs() {
-  return loadQuery(productSlugsQuery, {}, {
-    next: { tags: ['product'] },
-    staticGeneration: true,
-  })
-}
+export const loadHome = () =>
+  cached(homeQuery, {}, ['home'])
 
-export function loadPage(slug: string) {
-  return loadQuery(pageQuery, { slug }, { next: { tags: ['page', `page:${slug}`] } })
-}
+export const loadAllFaqs = () =>
+  cached(allFaqsQuery, {}, ['faqs'])
 
-export function loadPageSlugs() {
-  return loadQuery(pageSlugsQuery, {}, {
-    next: { tags: ['page'] },
-    staticGeneration: true,
-  })
-}
+export const loadHeader = () =>
+  cached(headerQuery, {}, ['settings'])
 
-export function loadLegalPage(slug: string) {
-  return loadQuery(legalPageQuery, { slug }, { next: { tags: ['legalPage', `legalPage:${slug}`] } })
-}
+export const loadSettings = () =>
+  cached(settingsQuery, {}, ['settings'])
 
-export function loadLegalPageSlugs() {
-  return loadQuery(legalPageSlugsQuery, {}, {
-    next: { tags: ['legalPage'] },
-    staticGeneration: true,
-  })
-}
+export const loadProduct = (slug: string) =>
+  cached(productQuery, { slug }, ['product', `product:${slug}`])
 
-export function loadLegalLandingPage(slug: string) {
-  return loadQuery(
-    legalLandingPageQuery,
-    { slug },
-    { next: { tags: ['legalLandingPages', `legalLandingPages:${slug}`] } },
-  )
-}
+export const loadProductSlugs = () =>
+  client.fetch(productSlugsQuery, {})
 
-export function loadLegalLandingPageSlugs() {
-  return loadQuery(legalLandingPageSlugsQuery, {}, {
-    next: { tags: ['legalLandingPages'] },
-    staticGeneration: true,
-  })
-}
+export const loadPage = (slug: string) =>
+  cached(pageQuery, { slug }, ['page', `page:${slug}`])
 
-export function loadIndustry(slug: string) {
-  return loadQuery(industriesQuery, { slug }, { next: { tags: ['industries', `industries:${slug}`] } })
-}
+export const loadPageSlugs = () =>
+  client.fetch(pageSlugsQuery, {})
 
-export function loadIndustrySlugs() {
-  return loadQuery(industriesSlugsQuery, {}, {
-    next: { tags: ['industries'] },
-    staticGeneration: true,
-  })
-}
+export const loadLegalPage = (slug: string) =>
+  cached(legalPageQuery, { slug }, ['legalPage', `legalPage:${slug}`])
 
-export function loadIntegrationsPage() {
-  return loadQuery(integrationsPageQuery, {}, { next: { tags: ['integrationsPage'] } })
-}
+export const loadLegalPageSlugs = () =>
+  client.fetch(legalPageSlugsQuery, {})
 
-export function loadIntegration(slug: string) {
-  return loadQuery(integrationsQuery, { slug }, { next: { tags: ['integrations', `integrations:${slug}`] } })
-}
+export const loadLegalLandingPage = (slug: string) =>
+  cached(legalLandingPageQuery, { slug }, ['legalLandingPages', `legalLandingPages:${slug}`])
 
-export function loadIntegrationSlugs() {
-  return loadQuery(integrationsSlugsQuery, {}, {
-    next: { tags: ['integrations'] },
-    staticGeneration: true,
-  })
-}
+export const loadLegalLandingPageSlugs = () =>
+  client.fetch(legalLandingPageSlugsQuery, {})
 
-export function loadAllIntegrations() {
-  return loadQuery(allIntegrationsQuery, {}, { next: { tags: ['integrations'] } })
-}
+export const loadIndustry = (slug: string) =>
+  cached(industriesQuery, { slug }, ['industries', `industries:${slug}`])
 
-export function loadVideoTestimonialsPage() {
-  return loadQuery(videoTestimonialsPageQuery, {}, { next: { tags: ['videoTestimonialsPage'] } })
-}
+export const loadIndustrySlugs = () =>
+  client.fetch(industriesSlugsQuery, {})
 
-export function loadBlogPage() {
-  return loadQuery(blogPageQuery, {}, { next: { tags: ['blogPage'] } })
-}
+export const loadAllIndustries = () =>
+  cached(allIndustriesQuery, {}, ['industries'])
 
-export function loadCaseStudiesPage() {
-  return loadQuery(caseStudiesPageQuery, {}, { next: { tags: ['caseStudiesPage'] } })
-}
+export const loadIntegrationsPage = () =>
+  cached(integrationsPageQuery, {}, ['integrationsPage'])
 
-export function loadWhitePapersPage() {
-  return loadQuery(whitePapersPageQuery, {}, { next: { tags: ['whitePapersPage'] } })
-}
+export const loadIntegration = (slug: string) =>
+  cached(integrationsQuery, { slug }, ['integrations', `integrations:${slug}`])
 
-export function loadWhitePapersList() {
-  return loadQuery(whitePapersListQuery, {}, { next: { tags: ['whitePapers'] } })
-}
+export const loadIntegrationSlugs = () =>
+  client.fetch(integrationsSlugsQuery, {})
 
-export function loadWhitePaper(slug: string) {
-  return loadQuery(
-    whitePaperBySlugQuery,
-    { slug },
-    { next: { tags: ['whitePapers', `whitePapers:${slug}`] } },
-  )
-}
+export const loadAllIntegrations = () =>
+  cached(allIntegrationsQuery, {}, ['integrations'])
 
-export function loadWhitePaperSlugs() {
-  return loadQuery(whitePaperSlugsQuery, {}, {
-    next: { tags: ['whitePapers'] },
-    staticGeneration: true,
-  })
-}
+export const loadVideoTestimonialsPage = () =>
+  cached(videoTestimonialsPageQuery, {}, ['videoTestimonialsPage'])
 
-export function loadCaseStudies() {
-  return loadQuery(caseStudiesQuery, {}, { next: { tags: ['caseStudy'] } })
-}
+export const loadBlogPage = () =>
+  cached(blogPageQuery, {}, ['blogPage'])
 
-export function loadCaseStudiesall() {
-  return loadQuery(caseStudiesAllQuery, {}, { next: { tags: ['caseStudy'] } })
-}
+export const loadCaseStudiesPage = () =>
+  cached(caseStudiesPageQuery, {}, ['caseStudiesPage'])
 
-/** Published `caseStudy` documents for listings and flexible sections (same query as `loadCaseStudies`). */
+export const loadWhitePapersPage = () =>
+  cached(whitePapersPageQuery, {}, ['whitePapersPage'])
+
+export const loadWhitePapersList = () =>
+  cached(whitePapersListQuery, {}, ['whitePapers'])
+
+export const loadWhitePaper = (slug: string) =>
+  cached(whitePaperBySlugQuery, { slug }, ['whitePapers', `whitePapers:${slug}`])
+
+export const loadWhitePaperSlugs = () =>
+  client.fetch(whitePaperSlugsQuery, {})
+
+export const loadCaseStudies = () =>
+  cached(caseStudiesQuery, {}, ['caseStudy'])
+
+export const loadCaseStudiesall = () =>
+  cached(caseStudiesAllQuery, {}, ['caseStudy'])
+
 export async function getAllCaseStudies(): Promise<CaseStudyListDocument[]> {
   const { data } = await loadCaseStudies()
   return (data as CaseStudyListDocument[] | null | undefined) ?? []
 }
 
-export function loadCaseStudy(slug: string) {
-  return loadQuery(caseStudyBySlugQuery, { slug }, { next: { tags: ['caseStudy', `caseStudy:${slug}`] } })
-}
+export const loadCaseStudy = (slug: string) =>
+  cached(caseStudyBySlugQuery, { slug }, ['caseStudy', `caseStudy:${slug}`])
 
-export function loadCaseStudySlugs() {
-  return loadQuery(caseStudySlugsQuery, {}, {
-    next: { tags: ['caseStudy'] },
-    staticGeneration: true,
-  })
-}
+export const loadCaseStudySlugs = () =>
+  client.fetch(caseStudySlugsQuery, {})
 
-export function loadBlogPosts() {
-  return loadQuery(blogPostsQuery, {}, { next: { tags: ['post'] } })
-}
+export const loadBlogPosts = () =>
+  cached(blogPostsQuery, {}, ['post'])
 
-export function loadBlogCategories() {
-  return loadQuery(blogCategoriesQuery, {}, { next: { tags: ['category'] } })
-}
+export const loadBlogCategories = () =>
+  cached(blogCategoriesQuery, {}, ['category'])
 
-export function loadBlogPost(slug: string) {
-  return loadQuery(blogPostBySlugQuery, { slug }, { next: { tags: ['post', `post:${slug}`] } })
-}
+export const loadBlogPost = (slug: string) =>
+  cached(blogPostBySlugQuery, { slug }, ['post', `post:${slug}`])
 
-export function loadPostSlugs() {
-  return loadQuery(blogPostSlugsQuery, {}, {
-    next: { tags: ['post'] },
-    staticGeneration: true,
-  })
-}
+export const loadPostSlugs = () =>
+  client.fetch(blogPostSlugsQuery, {})
 
-export function loadConversionPage(slug: string) {
-  return loadQuery(conversionPagesQuery, { slug }, { next: { tags: ['conversionPages', `conversionPages:${slug}`] } })
-}
+export const loadConversionPage = (slug: string) =>
+  cached(conversionPagesQuery, { slug }, ['conversionPages', `conversionPages:${slug}`])
 
-export function loadConversionPageSlugs() {
-  return loadQuery(conversionPagesSlugsQuery, {}, {
-    next: { tags: ['conversionPages'] },
-    staticGeneration: true,
-  })
-}
+export const loadConversionPageSlugs = () =>
+  client.fetch(conversionPagesSlugsQuery, {})
 
-export function loadSettings() {
-  return loadQuery(settingsQuery, {}, { next: { tags: ['settings'] } })
-}
+export const loadAllProducts = () =>
+  cached(allProductsQuery, {}, ['product'])

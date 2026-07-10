@@ -21,12 +21,308 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* scroll-behavior: smooth intentionally omitted.
+     Setting it on <html> makes window.scrollTo(0,0) animate during route
+     transitions — on iOS Safari this triggers the native momentum scroller
+     (300–800 ms) causing the "navigation appears stuck" symptom. Smooth
+     scrolling for anchor links is handled per-element where needed. */
+  height: 100%;
+  /* Prevent iOS font inflation in landscape */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  /* Prevent rubber-band overscroll from exposing bare body background on iOS */
+  overscroll-behavior-y: none;
 }
 
+/* Remove 300ms tap delay on iOS (pre-iOS 13 and specific cases) */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* Remove default iOS tap highlight flash on interactive elements */
+a,
+button,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Safari-safe viewport height — accounts for the iOS URL bar.
+   100vh in iOS Safari includes the area behind the address bar, causing
+   sections to be taller than the visible area. 100dvh (dynamic vh) adjusts
+   when the bar shows/hides; -webkit-fill-available is the legacy Safari
+   equivalent. Both are ignored by browsers that don't support them. */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen-safe {
+    min-height: -webkit-fill-available;
+  }
+}
+@supports (min-height: 100dvh) {
+  .min-h-screen-safe {
+    min-height: 100dvh;
+  }
+}
+
+.font-manrope {
+  font-family: var(--font-manrope);
+}
+
+.bg-brand {
+  background-color: #162a4a;
+}
+
+.bg-base {
+  background-color: #162a4a;
+}
+
+.bg-full {
+  background-size: 100% 100%;
+}
+
+/* PlatformDeepDiveSection — image crossfade when accordion item changes */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.25s ease-in-out;
+}
+
+
+/* ── Thank-you page — check icon entrance ────────────────────────────────────
+   Scale-up spring for the confirmation circle. Server component, but keyframes
+   live here per project convention (not in per-render <style> tags). */
+@keyframes check-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  65%  { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+.animate-check-pop {
+  animation: check-pop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+@keyframes fade-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease both;
+}
+
+/* ── ScrollMorphImage — initial 3D tilt (desktop-only) ──────────────────────
+   Inline style was: transform: rotateX(26deg) scale(0.83) translateY(52px)
+   Moving it here with an @media guard means mobile paints a flat image from
+   the very first frame — no JS/hydration needed to remove the tilt.
+   On ≥640px the tilt is applied via CSS; the spring-animation JS then overrides
+   via card.style.transform once the IntersectionObserver fires. */
+.scroll-morph-card {
+  transform-origin: 50% 100%;
+}
+@media (min-width: 640px) {
+  .scroll-morph-card {
+    transform: rotateX(26deg) scale(0.83) translateY(52px);
+  }
+}
+
+/* ── Scroll-nudge pulse animation (ScrollMorphImage) ─────────────────────────
+   Keyframes MUST live here, not in a Client Component <style> tag which would
+   re-inject into the CSSOM on every render (regression introduced if removed). */
+@keyframes nudge-pulse {
+  0%, 100% { transform: scaleY(0.25); opacity: 0.35; }
+  50%       { transform: scaleY(1);    opacity: 1;    }
+}
+.scroll-nudge-line {
+  transform-origin: top;
+  transform: scaleY(0.25);
+  opacity: 0.35;
+}
+.scroll-nudge-active .scroll-nudge-line {
+  animation: nudge-pulse 1.7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-nudge-active .scroll-nudge-line { animation: none; }
+}
+
+
+/* ── Range input — Safari/WebKit track fill ──────────────────────────────────
+   WebKit ignores background: on the <input> element for range inputs.
+   The fill percentage is passed as a CSS custom property (--range-fill) set
+   inline on the element via React style prop. */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #13A89E var(--range-fill, 0%),
+    #CBD5E1 var(--range-fill, 0%)
+  );
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #13A89E;
+  margin-top: -6px;
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: #CBD5E1;
+}
+input[type="range"]::-moz-range-progress {
+  height: 6px;
+  border-radius: 9999px;
+  background: #13A89E;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #13A89E;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Case study decorative pseudo-element gradients ─────────────────────────
+   Moved from inline <style> tags in CaseStudyLayout1/2 client components to
+   avoid repeated CSSOM mutations on every render. Values identical to original
+   (opacity clamped to 1 in browser matching the invalid "opacity: 20/10"). */
+.case_study_bg::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  background: radial-gradient(ellipse 80% 40% at 20% 52%, #5ea1ff 0%, #5e9cff 30%, #5595ff 55%, transparent 80%);
+  background-size: 100%;
+  filter: blur(100px);
+  overflow: hidden;
+  pointer-events: none;
+  width: 220px;
+  height: 320px;
+}
+.case_study_bg::after {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 0;
+  z-index: 20;
+  background: radial-gradient(ellipse 75% 38% at 18% 50%, #9aff9a 0%, #9bff9b 30%, #97ff97 55%, transparent 78%);
+  background-size: 100%;
+  filter: blur(100px);
+  overflow: hidden;
+  pointer-events: none;
+  width: 320px;
+  height: 200px;
+}
+@media screen and (max-width: 767px) {
+  .case_study_bg::before,
+  .case_study_bg::after { display: none; }
+}
+.case_study_bg2::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: -10%;
+  z-index: 20;
+  background: radial-gradient(ellipse 75% 38% at 18% 50%, #9aff9a 0%, #9bff9b 30%, #97ff97 55%, transparent 78%);
+  background-size: 100%;
+  filter: blur(100px);
+  overflow: hidden;
+  pointer-events: none;
+  width: 320px;
+  height: 200px;
+}
+/* ── Footer decorative glow ──────────────────────────────────────────────────
+   Moved from inline <style> in Footer RSC. Fixed: opacity was 30 (invalid,
+   browser ignored it); filter:blur removed — Safari compositor perf.
+   Pre-diffused radial gradient + border-radius achieves the same soft glow. */
+.ftr_bg::after {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 30%;
+  z-index: 20;
+  background: radial-gradient(ellipse 85% 75% at 45% 58%, #008ca8 0%, #008ea7 12%, #008eaa 25%, transparent 55%);
+  border-radius: 50%;
+  pointer-events: none;
+  width: 560px;
+  height: 370px;
+  opacity: 0.3;
+}
+@media screen and (max-width: 767px) {
+  .ftr_bg::after { display: none; }
+}
+
+/* .blue-bg pseudo-elements removed — bg-1.webp / bg-2.webp source files are
+   missing from /public/images/, causing 404 network errors on every page that
+   uses .blue-bg. The decorative overlay is omitted until the assets are added. */
+
+/* ── BuiltForRemoteSection — globe background ───────────────────────────────
+   Moved from an inline <style> tag to stop repeated CSSOM mutations per render.
+   The 840 KB PNG is suppressed on mobile (≤640px) to avoid a massive download
+   on constrained networks; only loads at sm+ breakpoints where it's visible. */
+.globe_img::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: 0;
+  right: 0;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 85%;
+  height: 85%;
+  margin: 0 auto;
+}
+@media screen and (min-width: 641px) {
+  .globe_img::after {
+    background-image: url("/images/oil-gas-globe.png");
+  }
+}
+@media screen and (max-width: 640px) {
+  .globe_img::after {
+    width: 100%;
+    height: 100%;
+    bottom: -7%;
+  }
+}
+
+/* ── ContactSection — globe contact background ───────────────────────────────
+   Same pattern: moved from inline <style>, PNG suppressed on mobile. */
+.globe_contact {
+  position: relative;
+  z-index: 0;
+}
+.globe_contact::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  width: 100%;
+  height: 55%;
+  z-index: 0;
+  opacity: 0.6;
+}
+@media screen and (min-width: 641px) {
+  .globe_contact::after {
+    background-image: url("/images/globe-1.png");
+  }
+}

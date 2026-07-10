@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-
+import { cache } from "react";
 import BaseLayout from "@/src/components/BaseLayout";
+import FaqSchema from "@/src/components/FaqSchema";
 import FlexibleContent from "@/src/components/FlexibleContent";
+import JsonLd from "@/src/components/JsonLd";
 import { seoGenerateMetadata } from "@/src/components/Seo";
-import { loadAllIntegrations, loadIntegrationsPage } from "@/src/sanity/loader/loadQuery";
+import { loadAllIntegrations, loadIntegrationsPage, loadHeader } from "@/src/sanity/loader/loadQuery";
+import { buildBreadcrumbs } from "@/lib/schema";
 
+const getHeader = cache(loadHeader)
 type IntegrationsPageData = {
   title?: string;
   seo?: {
@@ -46,12 +50,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function IntegrationsPage() {
-  const [integrationsPage, allIntegrations] = await Promise.all([
+  const [integrationsPage, allIntegrations, headerResult] = await Promise.all([
     loadIntegrationsPage(),
     loadAllIntegrations(),
+    getHeader()
   ]);
   const data = integrationsPage.data as IntegrationsPageData | null | undefined;
   const integrations = (allIntegrations.data as IntegrationListItem[] | null | undefined) ?? [];
+  const settings = headerResult.data ?? {}
   if (!data) {
     notFound();
   }
@@ -64,8 +70,15 @@ export default async function IntegrationsPage() {
 
 
   return (
-    <BaseLayout layout="light">
-      <FlexibleContent data={{ sections: sectionsWithIntegrations }} />
-    </BaseLayout>
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Integrations", href: "/integrations" },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
+        <FlexibleContent data={{ sections: sectionsWithIntegrations }} />
+        <FaqSchema sections={data.sections} />
+      </BaseLayout>
+    </>
   );
 }

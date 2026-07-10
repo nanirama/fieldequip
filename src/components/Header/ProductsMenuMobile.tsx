@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { memo, useCallback, useState } from "react";
 
 import { getSlugUrl } from "@/src/lib/utils";
 import type { CmsProductNavItem, MenuItem } from "./menu-types";
-
 function ChevronRightIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -54,61 +54,46 @@ function toMenuItems(cmsItems: CmsProductNavItem[] | null | undefined): MenuItem
   }));
 }
 
-function MenuSection({
-  section,
-  isOpen,
-  onToggle,
-}: {
-  section: MenuItem;
-  isOpen: boolean;
-  onToggle: () => void;
-}) {
-  const panelId = `products-section-${section.title.toLowerCase().replace(/\s+/g, "-")}`;
-
+function MenuSection({ section, onClose }: { section: MenuItem; onClose?: () => void }) {
   return (
     <li className="py-3">
-      <button
-        type="button"
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-        onClick={onToggle}
-        className="inline-flex w-full items-center justify-between gap-2 rounded-md text-left text-[2rem] font-semibold leading-tight text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-      >
-        <span className="text-[16px] font-bold text-[#020210] leading-tight mb-3">{section.title}</span>
-        <ChevronRightIcon
-          className={["h-4 w-4 shrink-0 text-teal-500 transition-transform", isOpen ? "rotate-90" : ""].join(" ")}
-        />
-      </button>
+      <span className="block text-[16px] font-bold text-[#020210] leading-tight mb-3">
+        <Link href={section?.href ?? "#"}>{section.title}</Link>
+      </span>
 
-      <div
-        id={panelId}
-        className={["grid transition-all duration-200", isOpen ? "mt-5 grid-rows-[1fr]" : "grid-rows-[0fr]"].join(" ")}
-      >
-        <div className="overflow-hidden">
-          <ul className="space-y-3" role="menu">
-            {section.children?.map((item) => (
-              <li key={item.title}>
-                <Link
-                  href={item.href ?? "#"}
-                  role="menuitem"
-                  className="inline-flex items-center gap-2 text-[16px] font-normal text-[#020210] leading-tight transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-                >
-                  {item.title}
-                  <ChevronRightIcon className="h-4 w-4 text-teal-500" />
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <ul className="space-y-3" role="menu">
+        {section.children?.map((item) => (
+          <li key={item.title}>
+            <Link
+              href={item?.href ?? "#"}
+              role="menuitem"
+              onClick={onClose}
+              prefetch={false}
+              className="inline-flex items-center gap-2 text-[16px] font-normal text-[#020210] leading-tight transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+            >
+              {item.title}
+              <ChevronRightIcon className="h-4 w-4 text-teal-500" />
+            </Link>
+          </li>
+        ))}
+      </ul>
 
-          <Link
-            href={section.href ?? "#"}
-            className="mt-7 inline-flex items-center gap-2 text-[16px] font-normal text-[#020210] leading-[130%] transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
-          >
-            Explore More Features
-            <ChevronRightIcon className="h-4 w-4 text-teal-500" />
-          </Link>
-        </div>
-      </div>
+      <Link
+        href={section.href ? `${section?.href}#features` : "#"}
+        scroll={false}
+        prefetch={false}
+        onClick={() => {
+          onClose?.();
+          const targetPath = (section?.href ?? "").replace(/\/$/, "");
+          const currentPath = window.location.pathname.replace(/\/$/, "");
+          if (currentPath !== targetPath) return;
+          document.getElementById("features")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className="mt-7 inline-flex items-center gap-2 text-[16px] font-normal text-[#020210] leading-[130%] transition-colors hover:text-teal-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+      >
+        Explore More Features
+        <ChevronRightIcon className="h-4 w-4 text-teal-500" />
+      </Link>
     </li>
   );
 }
@@ -126,16 +111,9 @@ function ProductsMenuMobileComponent({ className = "", menuTitle, menuDescriptio
   const description = menuDescription?.trim() || "Explore all of our products that can help your growth";
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openSections, setOpenSections] = useState<string[]>(() => menuItems.map((item) => item.title));
 
   const closeMenu = useCallback(() => {
     setIsMenuOpen(false);
-  }, []);
-
-  const toggleSection = useCallback((sectionTitle: string) => {
-    setOpenSections((prev) =>
-      prev.includes(sectionTitle) ? prev.filter((item) => item !== sectionTitle) : [...prev, sectionTitle],
-    );
   }, []);
 
   return (
@@ -158,7 +136,7 @@ function ProductsMenuMobileComponent({ className = "", menuTitle, menuDescriptio
 
       <div
         className={[
-          "fixed inset-x-0 top-0 z-50 max-h-dvh overflow-hidden bg-white transition-opacity duration-200",
+          "absolute inset-0 z-[60] bg-white transition-opacity duration-200 overflow-hidden",
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
         aria-hidden={!isMenuOpen}
@@ -166,11 +144,11 @@ function ProductsMenuMobileComponent({ className = "", menuTitle, menuDescriptio
         <nav
           id="products-mobile-drawer"
           aria-label="Products menu"
-          className="max-h-dvh overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
+          className="h-full max-h-full overflow-y-auto overscroll-contain px-6 pb-8 pt-6"
         >
           <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-              <Link href="/"><img src="/images/tinylogo.svg" alt="logo" width={41} height={35} loading="lazy" decoding="async" className="h-auto"/></Link>
+            <div>
+              <Link href="/"><Image src="/images/logo.png" alt="FieldEquip" width={187} height={35} className="h-auto mb-4" /></Link>
               <p className="text-[32px] font-semibold leading-tight text-[#020210] pt-3">{title}</p>
               <p className="mt-3 max-w-[24ch] text-[16px] leading-[1.35] text-[#020210]">{description}</p>
             </div>
@@ -192,8 +170,7 @@ function ProductsMenuMobileComponent({ className = "", menuTitle, menuDescriptio
               <MenuSection
                 key={section.title}
                 section={section}
-                isOpen={openSections.includes(section.title)}
-                onToggle={() => toggleSection(section.title)}
+                onClose={closeMenu}
               />
             ))}
           </ul>

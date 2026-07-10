@@ -64,7 +64,6 @@ export default function CaseStudyTestimonials({ data, caseStudyTitle }: Props) {
         >
           Client Testimonial
         </h2>
-
         {hasVideoOrImage ? (
           <div className="mt-6 w-full sm:mt-8">
             <ReusableVideoCard

@@ -154,7 +154,7 @@ export default function CaseStudyTwoSection() {
                                     {/* Right */}
                                     <div className="bg-white px-[32px] pb-[42px] shadow-sm flex flex-col justify-between rounded-[14px]">
                                         <div className="flex justify-end">
-                                            <Image src={'/images/“.webp'} alt="quotation" width={188} height={167} className="w-[188px]" />
+                                            <Image src={'/images/quote.webp'} alt="quotation" width={188} height={167} className="w-[188px]" />
                                         </div>
                                         <h3 className="text-lg sm:text-2xl max-w-[333px] font-semibold text-[#020210]">{item.quote}</h3>
                                         <p className="text-sm sm:text-base text-[#191921]">{item.company}</p>

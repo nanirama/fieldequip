@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import ROICalculator from './ROICalculator'
 
 type RoiCalculatorSectionData = {
   sectionTag?: string
@@ -26,6 +27,39 @@ export default function RoiCalculatorSection({ data }: Props) {
   const isZero = value === 0
   const isSmall = submittedValue !== null && submittedValue > 0 && submittedValue <= 50
   const isLarge = submittedValue !== null && submittedValue > 50
+
+  return(
+    <section className="w-full pt-28 pb-4 sm:py-16 lg:pt-40 lg:pb-4">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col lg:gap-14 sm:pb-12 pb-10  px-4 sm:px-6">
+          <div className="min-w-0">
+            {sectionTag && (
+              <p className="mb-3 text-sm font-medium text-[#13a89e]">
+                {sectionTag}
+              </p>
+            )}
+            {heading && (
+              <h2 className="text-balance text-3xl font-semibold leading-[1.06] tracking-tight text-[#020210] sm:text-4xl lg:text-5xl">
+                {heading}
+              </h2>
+            )}
+            {description && (
+              <p className="mt-5 text-base leading-relaxed text-[#020210]/60">
+                {description}
+              </p>
+            )}
+            
+          </div>
+          <div className="min-w-0">
+            <div className="w-full my-2">
+              <ROICalculator/>
+            </div>
+          </div>
+        </div>
+        <hr className="mt-2 border-slate-200" />
+      </div>
+    </section>
+  )
 
   return (
     <section className="w-full pt-28 pb-12 sm:py-16 lg:pt-40 lg:pb-10">
@@ -90,6 +124,51 @@ export default function RoiCalculatorSection({ data }: Props) {
         {isSmall && (
 
           <section className="relative overflow-hidden rounded-2xl roi_bg sm:p-12 p-6 bg-[#24467a] text-white ">
+            <style>
+              {`
+              .roi_bg {
+                position: relative;
+                z-index: 0;
+              }
+              .roi_bg::before,
+                .roi_bg::after {
+                  content: "";
+                  position: absolute;
+                  background-position: top right;
+                  background-repeat: no-repeat;
+                  background-size: 100% 100%;
+                  z-index: -1;
+                }
+
+                .roi_bg::before {
+                  top: -88%;
+                  left: 15%;
+                  width: 310px;
+                  height: 440px;
+                  background: radial-gradient(ellipse 70% 120% at 38% 0%, #8bff8b 0%, #88ff88 20%, #85ff85 40%, transparent 75%);
+                  filter: blur(100px);
+                  overflow: hidden;
+                  pointer-events: none;
+                }
+
+                .roi_bg::after {
+                  top: -70%;
+                  right: -4%;
+                  width: 375px;
+                  height: 365px;
+                  background: radial-gradient(ellipse 80% 150% at 70% 0%, #26b2fb 0%, #26b2fb 35%, #26b2fb 55%, transparent 82%);
+                  filter: blur(60px);
+                  overflow: hidden;
+                  pointer-events: none;
+                }
+                @media screen and (max-width: 767px) {
+                  .roi_bg::before,
+                  .roi_bg::after {
+                    display: none;
+                  }
+                }
+              `}
+            </style>
             <div className="grid lg:grid-cols-2 z-40 relative grid-cols-1 items-end gap-5 lg:gap-10 text-white w-full">
               <div className="flex flex-col gap-3 justify-end">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium">For Smaller Teams</h2>
@@ -108,6 +187,51 @@ export default function RoiCalculatorSection({ data }: Props) {
 
         {isLarge && (
           <section className="relative overflow-hidden rounded-2xl roi_bg p-12 bg-[#24467a] text-white ">
+            <style>
+              {`
+              .roi_bg {
+                  position: relative;
+                  z-index: 0;
+                }
+              .roi_bg::before,
+                .roi_bg::after {
+                  content: "";
+                  position: absolute;
+                  background-position: top right;
+                  background-repeat: no-repeat;
+                  background-size: 100% 100%;
+                  z-index: -1;
+                }
+
+                .roi_bg::before {
+                  top: -88%;
+                  left: 15%;
+                  width: 310px;
+                  height: 440px;
+                  background: radial-gradient(ellipse 70% 120% at 38% 0%, #8bff8b 0%, #88ff88 20%, #85ff85 40%, transparent 75%);
+                  filter: blur(100px);
+                  overflow: hidden;
+                  pointer-events: none;
+                }
+
+                .roi_bg::after {
+                  top: -70%;
+                  right: -4%;
+                  width: 375px;
+                  height: 365px;
+                  background: radial-gradient(ellipse 80% 150% at 70% 0%, #26b2fb 0%, #26b2fb 35%, #26b2fb 55%, transparent 82%);
+                  filter: blur(60px);
+                  overflow: hidden;
+                  pointer-events: none;
+                }
+                @media screen and (max-width: 767px) {
+                  .roi_bg::before,
+                  .roi_bg::after {
+                    display: none;
+                  }
+                }
+              `}
+            </style>
             <div className="grid lg:grid-cols-2 z-40 relative grid-cols-1 items-end gap-5 lg:gap-10 text-white w-full">
               <div className="flex flex-col gap-3 justify-end">
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-medium">For Larger Teams</h2>
@@ -123,6 +247,9 @@ export default function RoiCalculatorSection({ data }: Props) {
             </div>
           </section>
         )}
+        <div className="w-full my-5">
+          <ROICalculator/>
+        </div>
 
       </div>
     </section>

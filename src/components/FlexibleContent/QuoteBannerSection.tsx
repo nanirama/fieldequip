@@ -1,5 +1,3 @@
-import { section } from "framer-motion/client";
-
 export type QuoteBannerSectionData = {
   quote?: string;
 };

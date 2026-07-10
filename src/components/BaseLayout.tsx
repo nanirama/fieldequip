@@ -9,21 +9,23 @@ import Footer from "./Footer";
 // Both layers invalidate via revalidateTag('settings') from the Sanity webhook.
 const BaseLayout = ({
   children,
+  settings,
   layout = "light",
 }: {
   children: React.ReactNode;
+  settings:any;
   layout?: "dark" | "light";
 }) => {
   return (
     <>
       <Suspense fallback={null}>
-        <Header layout={layout} />
+        <Header layout={layout} settings={settings}  />
       </Suspense>
       <main id="main-content" className="min-h-dvh flex-1">
         {children}
       </main>
       <Suspense fallback={null}>
-        <Footer />
+        <Footer  settings={settings}/>
       </Suspense>
     </>
   );

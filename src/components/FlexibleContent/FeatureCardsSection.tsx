@@ -120,7 +120,7 @@ export default function FeatureCardsSection({ data }: { data?: FeatureCardsSecti
                     {iconUrl ? (
                       <>
                         <div className="w-[42px] h-[42px] rounded-full bg-[#3C5B8D1A] flex justify-center items-center">
-                          <Image src={iconUrl} alt="" aria-hidden width={42} height={42} className="h-10 w-10 object-contain" />
+                          <Image src={iconUrl} alt="" aria-hidden width={42} height={42} className="h-10 w-10 object-contain" quality={80} />
                         </div>
                       </>
                     ) : (
@@ -156,6 +156,7 @@ export default function FeatureCardsSection({ data }: { data?: FeatureCardsSecti
               sizes="(max-width: 1024px) 100vw, 85vw"
               placeholder={screenshotBlur ? "blur" : "empty"}
               blurDataURL={screenshotBlur || undefined}
+              quality={80}
             />
           </figure>
         ) : null}

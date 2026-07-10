@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { cache } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,11 +9,13 @@ import type { PortableTextBlock } from "@portabletext/types";
 
 import BaseLayout from "@/src/components/BaseLayout";
 import { ButtonComponent } from "@/src/components/ButtonComponent";
+import JsonLd from "@/src/components/JsonLd";
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import { urlForImage } from "@/src/sanity/lib/utils";
-import { loadWhitePapersList, loadWhitePapersPage } from "@/src/sanity/loader/loadQuery";
+import { loadWhitePapersList, loadWhitePapersPage, loadHeader } from "@/src/sanity/loader/loadQuery";
 import type { SanityImage } from "@/src/types/sanity-image";
-
+import { buildBreadcrumbs } from "@/lib/schema";
+const getHeader = cache(loadHeader)
 type WhitePapersPageCta = {
   label?: string;
   url?: string | null;
@@ -118,11 +121,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function WhitepaperPage() {
-  const [pageResult, listResult] = await Promise.all([
+  const [pageResult, listResult, headerResult] = await Promise.all([
     loadWhitePapersPage(),
     loadWhitePapersList(),
+    getHeader()
   ]);
   const data = pageResult.data as WhitePapersPageData | null | undefined;
+  const settings = headerResult.data ?? {}
   const papers =
     (listResult.data as WhitePaperListItem[] | null | undefined)?.filter(
       (p): p is WhitePaperListItem => Boolean(p?._id && p?.slug),
@@ -140,7 +145,12 @@ export default async function WhitepaperPage() {
   const ctaHref = cta?.url?.trim() || undefined;
 
   return (
-    <BaseLayout layout="light">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Whitepapers", href: "/whitepaper" },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
       <div className="md:absolute sm:-bottom-[20%] md:-bottom-[40%] md:left-[0%] sm:left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 md:w-[481px] md:h-[580px]" />
       <div className="absolute sm:top-[0%] md:right-[10%] sm:right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 md:w-[432px] md:h-[450px] " />
       <section className="relative w-full overflow-hidden bg-white">
@@ -172,6 +182,7 @@ export default async function WhitepaperPage() {
                     placeholder={data.image?.lqip ? "blur" : "empty"}
                     blurDataURL={data.image?.lqip}
                     className="h-auto w-full object-cover"
+                    quality={80}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
@@ -257,6 +268,7 @@ export default async function WhitepaperPage() {
                                   placeholder={paper.image?.lqip ? "blur" : "empty"}
                                   blurDataURL={paper.image?.lqip}
                                   className="h-auto w-full object-cover rounded-xl transition duration-300 group-hover:scale-[1.02]"
+                                  quality={80}
                                   sizes="(max-width: 1024px) 100vw, 50vw"
                                 />
                               </div>
@@ -279,6 +291,7 @@ export default async function WhitepaperPage() {
           </div>
         ) : null}
       </section>
-    </BaseLayout>
+      </BaseLayout>
+    </>
   );
 }

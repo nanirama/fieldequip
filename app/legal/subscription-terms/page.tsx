@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+import JsonLd from "@/src/components/JsonLd";
+import { seoGenerateMetadata } from "@/src/components/Seo";
+import { buildBreadcrumbs } from "@/lib/schema";
+
+export const metadata: Metadata = seoGenerateMetadata({
   title: "FieldEquip Subscription Terms",
   description:
     "FieldEquip Subscription Terms governing access to and use of the FieldEquip software-as-a-service platform.",
-};
+  url: "/legal/subscription-terms",
+});
 
 const keyNotes = [
   "The Order Form controls commercial terms (fees, subscription term, support plan, and any negotiated exceptions).",
@@ -15,7 +20,12 @@ const keyNotes = [
 
 const LegalSubscriptionTermsPage = () => {
   return (
-    <main className="bg-white">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Subscription Terms", href: "/legal/subscription-terms" },
+      ])} />
+      <main className="bg-white">
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <header>
           <h1 className="font-manrope text-3xl font-semibold tracking-tight text-[#020210] sm:text-4xl">
@@ -66,7 +76,8 @@ const LegalSubscriptionTermsPage = () => {
           </div>
         </article>
       </section>
-    </main>
+      </main>
+    </>
   );
 };
 

@@ -75,6 +75,7 @@ function OtherCaseStudyCardInner({ item }: Props) {
               sizes="(max-width: 1023px) 92vw, min(45vw, 720px)"
               loading="lazy"
               decoding="async"
+              quality={80}
             />
           ) : null}
           {overlayName ? (

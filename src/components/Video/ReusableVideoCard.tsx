@@ -96,11 +96,30 @@ export default function ReusableVideoCard({
       }
     };
 
-    document.body.style.overflow = "hidden";
+    // iOS Safari ignores overflow:hidden on <body> — the page scrolls behind the
+    // modal. The safe fix mirrors the header mobile-menu approach: position:fixed
+    // + top:-scrollY preserves position, restored on close.
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const sbw = window.innerWidth - document.documentElement.clientWidth;
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    if (sbw > 0) body.style.paddingRight = `${sbw}px`;
+    body.dataset.videoScrollY = String(scrollY);
+
     window.addEventListener("keydown", onEsc);
 
     return () => {
-      document.body.style.overflow = "";
+      const saved = parseInt(body.dataset.videoScrollY ?? "0", 10);
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.paddingRight = "";
+      delete body.dataset.videoScrollY;
+      window.scrollTo({ top: saved, behavior: "instant" });
       window.removeEventListener("keydown", onEsc);
     };
   }, [isModalOpen]);

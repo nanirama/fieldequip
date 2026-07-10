@@ -84,19 +84,23 @@ function readBreadcrumb(page?: string): Array<{ label: string; href?: string }> 
 function Breadcrumb({ page }: { page?: string }) {
   const crumbs = readBreadcrumb(page);
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 sm:mb-8">
-      <ol className="flex flex-wrap items-center gap-2 text-xs text-[#020210]/70 sm:text-sm">
+    <nav aria-label="Breadcrumb" className="relative z-10 mb-6 sm:mb-8">
+      <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#020210]/70 sm:text-sm">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
           return (
             <li key={`${crumb.label}-${index}`} className="flex items-center gap-2">
               {index > 0 ? <span className="text-[#13A89E]">{">"}</span> : null}
               {crumb.href && !isLast ? (
-                <Link href={crumb.href} className="hover:text-[#020210]">
+                <Link
+                  href={crumb.href}
+                  className="cursor-pointer py-2 hover:text-[#020210]"
+                  style={{ touchAction: "manipulation" }}
+                >
                   {crumb.label}
                 </Link>
               ) : (
-                <span aria-current={isLast ? "page" : undefined} className={isLast ? "text-[#020210]" : ""}>
+                <span aria-current={isLast ? "page" : undefined} className={isLast ? "py-2 text-[#020210]" : "py-2"}>
                   {crumb.label}
                 </span>
               )}
@@ -123,8 +127,8 @@ export default function PageImageHeroSection({ data, page }: Props) {
       aria-labelledby={heading ? "page-image-hero-heading" : undefined}
       className="w-full pt-28 lg:pt-32 relative"
     >
-      <div className="absolute -bottom-[20%] md:left-[0%] left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 w-[481px] h-[580px] " />
-      <div className="absolute top-[0%] md:right-[10%] right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 w-[432px] h-[450px] " />
+      <div className="pointer-events-none absolute -bottom-[20%] md:left-[0%] left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 w-[481px] h-[580px] " />
+      <div className="pointer-events-none absolute top-[0%] md:right-[10%] right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 w-[432px] h-[450px] " />
 
 
       <div className="mx-auto max-w-7xl border-b border-slate-300/70 px-4 sm:pb-12 lg:pb-20">
@@ -176,6 +180,7 @@ export default function PageImageHeroSection({ data, page }: Props) {
                 fill
                 sizes="(max-width: 1024px) 100vw, 33vw"
                 className="object-contain  rounded-2xl"
+                quality={80}
               />
             ) : null}
             </div>

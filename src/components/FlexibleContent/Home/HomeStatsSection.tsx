@@ -40,7 +40,7 @@ const HomeStatsSection = ({ data, page }: { data?: StatsSectionData, page?: stri
             style={backgroundColor ? { backgroundColor } : undefined}
         >
             <div className="max-w-7xl mx-auto px-4">
-                <h2 className="sr-only">Key results</h2>
+                {/* <h2 className="sr-only">Key results</h2> */}
                 <div
                     className={`grid gap-4 items-start ${isHome ? "md:grid-cols-3 py-5" : "md:grid-cols-4 pt-6 pb-0"
                         }`}

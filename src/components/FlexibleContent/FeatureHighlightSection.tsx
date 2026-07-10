@@ -218,7 +218,7 @@ export default function FeatureHighlightSection({ data }: Props) {
                 <div className="order-1 lg:order-1 md:pb-16 w-full">
                   <Link href="/" className="mb-4 inline-block">
                     <Image
-                      src="/images/logo.svg"
+                      src="/images/logo.png"
                       alt="FieldEquip"
                       width={187}
                       height={35}
@@ -263,6 +263,7 @@ export default function FeatureHighlightSection({ data }: Props) {
                         className="h-auto w-full rounded-xl object-contain border"
                         placeholder={buildSystemsBlurUrl ? "blur" : "empty"}
                         blurDataURL={buildSystemsBlurUrl || undefined}
+                        quality={80}
                       />
                     </div>
                   </div>

@@ -63,6 +63,7 @@ export default function Soc2Type2Section({ data }: { data?: Soc2Type2SectionData
                     sizes="(max-width: 1024px) 80vw, 40vw"
                     placeholder={blurUrl ? "blur" : "empty"}
                     blurDataURL={blurUrl || undefined}
+                    quality={80}
                   />
                 </figure>
               ) : null}

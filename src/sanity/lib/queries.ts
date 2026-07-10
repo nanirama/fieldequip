@@ -43,7 +43,12 @@ import {
   contactSectionFragment,
   scheduleDemoSectionFragment,
   whitePaperHeroSectionFragment,
+  whitePaperFormSectionFragment,
+  whitePaperIntroSectionFragment,
   roiCalculatorSectionFragment,
+  fieldEquipAdvantageSectionFragment,
+  packageDetailsSectionFragment,
+  roiPreviewSectionFragment,
 } from './fragments'
 
 export const productQuery = groq`
@@ -121,6 +126,7 @@ export const pageQuery = groq`
       ${featureGridSectionFragment},
       ${featureCardsSectionFragment},
       ${caseStudiesSectionFragment},
+      ${clientLogosSectionFragment},      
     }
   }
 `
@@ -178,7 +184,8 @@ export const homeQuery = groq`
       ${caseStudiesSectionFragment},
       ${noMiddlemenSectionFragment},
       ${ctaSectionFragment},
-      ${mediaContentSectionFragment}
+      ${mediaContentSectionFragment},
+      ${faqSectionFragment}
     }
   }
 `
@@ -199,7 +206,8 @@ export const integrationsPageQuery = groq`
       ${soc2Type2SectionFragment},
       ${integrationsSectionFragment},
       ${ctaSectionFragment},
-      ${splitContentSectionFragment}
+      ${splitContentSectionFragment},
+      ${faqSectionFragment}
     }
   }
 `
@@ -222,13 +230,21 @@ export const integrationsQuery = groq`
       ${ctaSectionFragment},
       ${splitContentSectionFragment},
       ${featureCardsSectionFragment},
-      ${outcomeSplitSectionFragment}
+      ${outcomeSplitSectionFragment},
+      ${faqSectionFragment}
     }
   }
 `
 
 export const integrationsSlugsQuery = groq`
   *[_type == "integrations" && defined(slug.current) && listingOnly != true && !(_id in path("drafts.**"))]{
+    "slug": slug.current
+  }
+`
+
+export const allProductsQuery = groq`
+  *[_type == "product" && defined(slug.current) && !(_id in path("drafts.**"))] | order(title asc){
+    title,
     "slug": slug.current
   }
 `
@@ -246,7 +262,7 @@ export const allIndustriesQuery = groq`
 `
 
 export const allIntegrationsQuery = groq`
-  *[_type == "integrations" && !(_id in path("drafts.**"))] | order(title asc){
+  *[_type == "integrations" && !(_id in path("drafts.**"))] | order(orderBy asc, title asc){
     _id,
     title,
     listingOnly,
@@ -271,7 +287,8 @@ export const videoTestimonialsPageQuery = groq`
     sections[]{
       _type,
       ${videoTestimonialsSectionFragment},
-      ${ctaSectionFragment}
+      ${ctaSectionFragment},
+      ${faqSectionFragment}
     }
   }
 `
@@ -375,8 +392,9 @@ export const caseStudiesAllQuery = groq`
   }
 `
 export const caseStudiesQuery = groq`
-  *[_type == "caseStudy" && defined(clientTestimonial) && !(_id in path("drafts.**"))] | order(_createdAt desc){
+  *[_type == "caseStudy" && defined(clientTestimonial) && !(_id in path("drafts.**"))] | order(orderBy asc, _createdAt desc){
     _id,
+    orderBy,
     name,
     "slug": slug.current,
     tags,
@@ -406,7 +424,7 @@ export const caseStudiesQuery = groq`
   }
 `
 
-/** Single case study document for /case-studies/[slug] (full content + SEO). */
+/** Single case study document for /case-study/[slug] (full content + SEO). */
 export const caseStudyBySlugQuery = groq`
   *[_type == "caseStudy" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
     _id,
@@ -521,16 +539,18 @@ export const blogPostsQuery = groq`
 `
 
 export const blogCategoriesQuery = groq`
-  *[_type == "category" && defined(slug.current) && !(_id in path("drafts.**"))] | order(title asc) {
+  *[_type == "category" && defined(slug.current) && !(_id in path("drafts.**"))] | order(orderBy asc, title asc) {
     _id,
     title,
-    "slug": slug.current
+    "slug": slug.current,
+    orderBy
   }
 `
 
 export const blogPostBySlugQuery = groq`
   *[_type == "post" && slug.current == $slug && !(_id in path("drafts.**"))][0]{
     _id,
+    _updatedAt,
     title,
     "slug": slug.current,
     excerpt,
@@ -553,7 +573,19 @@ export const blogPostBySlugQuery = groq`
       title,
       "slug": slug.current
     },
-    body,
+    body[]{
+      ...,
+      _type == "portableFaqSection" => {
+        _type,
+        _key,
+        title,
+        "faqs": faqs[]->{
+          _id,
+          question,
+          answer
+        }
+      }
+    },
     seo{
       metaTitle,
       metaDescription,
@@ -573,6 +605,7 @@ export const legalPageQuery = groq`
     _id,
     title,
     "slug": slug.current,
+    effectiveDate,
     content,
     seo{
       metaTitle,
@@ -661,7 +694,10 @@ export const whitePaperBySlugQuery = groq`
     sections[]{
       _type,
       ${whitePaperHeroSectionFragment},
-      ${scheduleDemoSectionFragment}
+      ${whitePaperFormSectionFragment},
+      ${whitePaperIntroSectionFragment},
+      ${scheduleDemoSectionFragment},
+      ${faqSectionFragment}
     }
   }
 `
@@ -686,7 +722,12 @@ export const conversionPagesQuery = groq`
       ${caseStudiesSectionFragment},
       ${contactSectionFragment},
       ${scheduleDemoSectionFragment},
-      ${roiCalculatorSectionFragment}
+      ${roiCalculatorSectionFragment},
+      ${faqSectionFragment},
+      ${splitContentSectionFragment},
+      ${fieldEquipAdvantageSectionFragment},
+      ${packageDetailsSectionFragment},
+      ${roiPreviewSectionFragment},
     }
   }
 `
@@ -697,11 +738,40 @@ export const conversionPagesSlugsQuery = groq`
   }
 `
 
+// All published FAQ documents — used to emit FAQPage structured data on pages
+// whose Sanity sections don't include a faqSection (e.g. the home page).
+export const allFaqsQuery = groq`
+  *[_type == "faqs" && !(_id in path("drafts.**"))] | order(_createdAt asc) {
+    _id,
+    question,
+    answer
+  }
+`
+
 // Minimal query for the Header — only the 4 nav sections it renders.
 // settingsQuery also pulls footer fields (footerNote, socialLinks, copyright,
 // footerMenu, legalNav) which the header never uses. This query skips them.
 export const headerQuery = groq`
   *[_type == "settings"][0]{
+    footerNote,
+    "socialLinks": socialLinks[]{
+      platform,
+      url
+    },
+    copyright,
+    "footerMenu": footerMenu[]{
+      menuTitle,
+      "navItems": navItems[]{
+        title,
+        "_type": link->_type,
+        "slug": link->slug.current
+      }
+    },
+    "legalNav": legalNav[]{
+      title,
+      "_type": link->_type,
+      "slug": link->slug.current
+    },
     productsTitle,
     productsDescription,
     "productNav": productNav[]{

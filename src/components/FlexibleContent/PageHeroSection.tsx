@@ -1,5 +1,3 @@
-'use client'
-import { usePathname } from 'next/navigation'
 import Link from "next/link";
 import { ButtonComponent } from "../ButtonComponent";
 
@@ -35,6 +33,22 @@ function isValidHref(url: unknown): url is string {
   return typeof url === "string" && url.trim().length > 0;
 }
 
+// Derive whether we're on the careers page from the page-prop JSON breadcrumb
+// rather than calling usePathname(). This keeps the component as a Server
+// Component, eliminating client hydration cost on every product/page hero.
+function isCareersBreadcrumb(page?: string): boolean {
+  if (!page) return false;
+  try {
+    const parsed = JSON.parse(page) as {
+      breadcrumb?: Array<{ label?: string; href?: string }>;
+    };
+    const last = parsed.breadcrumb?.at(-1);
+    return last?.label?.toLowerCase().trim() === "careers";
+  } catch {
+    return false;
+  }
+}
+
 function Breadcrumb({ breadcrumb }: { breadcrumb?: BreadcrumbData | null }) {
   if (!breadcrumb) return null;
   const items = [
@@ -44,7 +58,7 @@ function Breadcrumb({ breadcrumb }: { breadcrumb?: BreadcrumbData | null }) {
       .map((i) => ({ title: i.title!.trim(), href: i.href ?? undefined })),
   ];
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 flex justify-center sm:mb-8">
+    <nav aria-label="Breadcrumb" className="relative z-10 mb-6 flex justify-center sm:mb-8">
       <ol className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-xs text-[#020210] sm:text-sm">
         {items.map((item, idx) => {
           const isLast = idx === items.length - 1;
@@ -58,13 +72,14 @@ function Breadcrumb({ breadcrumb }: { breadcrumb?: BreadcrumbData | null }) {
                 </span>
               ) : null}
               {isLast || !item.href ? (
-                <span className="font-normal text-[#020210]" aria-current={isLast ? "page" : undefined}>
+                <span className="py-2 font-normal text-[#020210]" aria-current={isLast ? "page" : undefined}>
                   {item.title}
                 </span>
               ) : (
                 <Link
                   href={item.href}
-                  className="transition-colors hover:text-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                  className="cursor-pointer py-2 transition-colors hover:text-[#111827] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6]"
+                  style={{ touchAction: "manipulation" }}
                 >
                   {item.title}
                 </Link>
@@ -77,56 +92,25 @@ function Breadcrumb({ breadcrumb }: { breadcrumb?: BreadcrumbData | null }) {
   );
 }
 
-function PrimaryCta({
-  label,
-  href,
-  external,
-}: {
-  label: string;
-  href: string;
-  external: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-[#14B8A6] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0d9488] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#14B8A6] sm:w-auto sm:min-h-0"
-    >
-      {label}
-    </Link>
-  );
-}
-
-function SecondaryCta({
-  label,
-  href,
-  external,
-}: {
-  label: string;
-  href: string;
-  external: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[#D1D5DB] bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-400 hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 sm:w-auto sm:min-h-0"
-    >
-      {label}
-    </Link>
-  );
-}
-
-export default function PageHeroSection({ data }: Props) {
+export default function PageHeroSection({ data, page }: Props) {
   const heading = data?.heading?.trim() ?? "";
   const subheading = data?.subheading?.trim();
   const primaryButton = data?.primaryButton;
   const secondaryButton = data?.secondaryButton;
-  const pathname = usePathname()
-  const isCareers = pathname === '/careers'
+  const pageData = page ? (() => { try { return JSON.parse(page); } catch { return { page }; } })() : null;
 
-  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  // Server-side derivation — no usePathname() needed, no client hydration cost.
+  const isCareers = isCareersBreadcrumb(page);
+
   const secondaryHref = isValidHref(secondaryButton?.url) ? secondaryButton.url.trim() : "";
+  let primaryHref = ''
+
+  
+  if(pageData?.page==='get-a-quote'){
+    primaryHref = '#get-quote'
+  } else {
+    primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  }
 
   const primaryLabel = primaryButton?.label?.trim() || (primaryHref ? "Learn more" : "");
   const secondaryLabel = secondaryButton?.label?.trim() || (secondaryHref ? "Learn more" : "");
@@ -136,15 +120,15 @@ export default function PageHeroSection({ data }: Props) {
       aria-labelledby="page-hero-heading"
       className="relative w-full max-w-[1920px] mx-auto bg-white"
     >
-
-      <div className="md:absolute sm:-bottom-[20%] md:-bottom-[40%] md:left-[0%] sm:left-0 bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 md:w-[481px] md:h-[580px]" />
-      <div className="absolute sm:top-[0%] md:right-[10%] sm:right-0 bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 md:w-[432px] md:h-[450px] " />
+      {/* Decorative shadows — hidden on mobile to avoid loading large PNGs on small screens */}
+      <div className="hidden md:block pointer-events-none md:absolute md:-bottom-[40%] md:left-[0%] bg-[url('/images/abt-hero-left-shadow.png')] bg-no-repeat bg-contain z-40 md:w-[481px] md:h-[580px]" />
+      <div className="hidden md:block pointer-events-none absolute md:top-[0%] md:right-[10%] bg-[url('/images/abt-hero-right-shadow.png')] bg-no-repeat bg-contain z-30 md:w-[432px] md:h-[450px]" />
 
       <div
-        className={`relative mx-auto max-w-7xl px-4 sm:pb-16 pb-10 pt-28 text-center md:pb-20 sm:pt-32 lg:pb-24 lg:pt-36 z-40 ${isCareers ? "border-b border-[#ecedf0]" : ""
-          }`}
+        className={`relative mx-auto max-w-7xl px-4 sm:pb-16 pb-10 pt-28 text-center md:pb-20 sm:pt-32 lg:pb-24 lg:pt-36 z-40 ${
+          isCareers ? "border-b border-[#ecedf0]" : ""
+        }`}
       >
-        
         <Breadcrumb breadcrumb={data?.breadcrumb} />
 
         {heading ? (
@@ -161,7 +145,7 @@ export default function PageHeroSection({ data }: Props) {
         )}
 
         {subheading ? (
-          <p className="mx-auto mt-6 max-w-3xl text-base mx-auto leading-relaxed text-[#020210]/70 sm:text-lg sm:leading-relaxed">
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-relaxed text-[#020210]/70 sm:text-lg sm:leading-relaxed">
             {subheading}
           </p>
         ) : null}
@@ -173,25 +157,6 @@ export default function PageHeroSection({ data }: Props) {
             </ButtonComponent>
           </div>
         ) : null}
-
-        {/* {(primaryHref || secondaryHref) && (primaryLabel || secondaryLabel) ? (
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:gap-4">
-            {primaryHref && primaryLabel ? (
-              <PrimaryCta
-                label={primaryLabel}
-                href={primaryHref}
-                external={shouldOpenInNewTab(primaryHref, primaryButton?.buttonType)}
-              />
-            ) : null}
-            {secondaryHref && secondaryLabel ? (
-              <SecondaryCta
-                label={secondaryLabel}
-                href={secondaryHref}
-                external={shouldOpenInNewTab(secondaryHref, secondaryButton?.buttonType)}
-              />
-            ) : null}
-          </div>
-        ) : null} */}
       </div>
     </section>
   );

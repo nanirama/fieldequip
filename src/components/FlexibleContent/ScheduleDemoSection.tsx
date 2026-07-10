@@ -123,9 +123,11 @@ export default function ScheduleDemoSection({ data, page }: Props) {
 
   const routePageSlug = readRoutePageSlug(page);
 
+  console.log('routePageSlug',routePageSlug)
   return (
     <section
-      className={`w-full pt-28 pb-12 sm:py-16  ${routePageSlug === "demo" ? "lg:pt-36" : "lg:pt-20"}`}
+      className={`w-full pb-12 bg-white sm:py-20 ${(routePageSlug === "demo" ||  routePageSlug === "demo/") ? "pt-24 lg:pt-36" : "pt-12 lg:pt-20 scroll-mt-12 "}`}
+      id="get-quote"
     >
       <div className="mx-auto max-w-7xl px-4">
         <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-20">
@@ -137,12 +139,21 @@ export default function ScheduleDemoSection({ data, page }: Props) {
                 {sectionTag}
               </p>
             )}
-
-            {heading && (
-              <h2 className="text-balance text-xl font-bold leading-tight text-[#020210] sm:text-2xl lg:text-[32px]">
-                {heading}
-              </h2>
+            {routePageSlug === 'demo' ? (
+              heading && (
+                <h1 className="text-balance text-xl font-bold leading-tight text-[#020210] sm:text-2xl lg:text-[32px]">
+                  {heading}
+                </h1>
+              )
+            ) : (
+              heading && (
+                <h2 className="text-balance text-xl font-bold leading-tight text-[#020210] sm:text-2xl lg:text-[32px]">
+                  {heading}
+                </h2>
+              )
             )}
+
+            
 
             {description && description.length > 0 && (
               <div className="mt-5">
@@ -165,6 +176,7 @@ export default function ScheduleDemoSection({ data, page }: Props) {
                     placeholder={image?.lqip ? "blur" : "empty"}
                     blurDataURL={image?.lqip}
                     className="h-auto w-full object-cover"
+                    quality={80}
                     sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                 </div>
@@ -203,9 +215,12 @@ export default function ScheduleDemoSection({ data, page }: Props) {
           </div>
 
           {/* ── Right: static form card ── */}
-          <HubSpotForm
-            title="See FieldEquip in Action"
-          />
+          <div className="bg-white rounded-2xl shadow-[0_0_25px_-3px_rgba(0,0,0,0.1)]">
+            <HubSpotForm
+              page={routePageSlug}
+              title={routePageSlug === 'contact' ? 'Contact Us' : routePageSlug === 'get-a-quote' ? 'Request Your Custom Quote' : 'Schedule a One-On-One Personalized Demo'}
+            />
+          </div>
         </div>
       </div>
     </section>

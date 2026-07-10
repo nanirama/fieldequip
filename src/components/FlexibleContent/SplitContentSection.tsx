@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-
+import { ButtonComponent } from "@/src/components/ButtonComponent";
 type CmsButton = {
   label?: string | null;
   url?: string | null;
@@ -120,7 +120,10 @@ function PrimaryCta({
   );
 }
 
-export default function SplitContentSection({ data }: { data?: SplitContentSectionData }) {
+export default function SplitContentSection({ data, page }: { data?: SplitContentSectionData, page?: string }) {
+  const pageData = page ? (() => { try { return JSON.parse(page); } catch { return { page }; } })() : null;
+  const pageSlug = pageData?.page as string | undefined;
+
   const theme = normalizeTheme(data?.theme);
   const isDark = theme === "dark";
   const isGray = theme === "gray";
@@ -142,7 +145,7 @@ export default function SplitContentSection({ data }: { data?: SplitContentSecti
       ].join(" ")}
     >
       <div className="mx-auto max-w-7xl px-4">
-        <div className={`pb-6 sm:pb-12 ${isDark ? "border-white/15 border-b" : ""}`}>
+        <div className={`pb-6 sm:pb-12 ${isDark && (pageSlug!=='get-a-quote')  ? "border-white/15 border-b" : ""}`}>
           <div className="grid items-end gap-8 lg:grid-cols-2 lg:gap-12">
             <header className="min-w-0">
               {sectionTag ? (
@@ -170,15 +173,26 @@ export default function SplitContentSection({ data }: { data?: SplitContentSecti
               {content && content.length > 0 ? (
                 <PortableText value={content} components={isDark ? darkPt : lightPt} />
               ) : null}
-              {primaryHref && primaryLabel ? (
+              {data?.primaryButton && data?.primaryButton?.label && (
+                <div className="w-full my-5">
+                <ButtonComponent
+                  variant={data?.primaryButton?.buttonType ?? "primary"}
+                  className="w-full sm:w-auto"
+                  href={data?.primaryButton?.url}
+                >
+                  {data?.primaryButton?.label}
+                </ButtonComponent>
+                </div>
+              )}
+              {/* {primaryLabel ? (
                 <div className="mt-5">
                   <PrimaryCta
                     label={primaryLabel}
-                    href={primaryHref}
+                    href={primaryHref }
                     external={shouldOpenInNewTab(primaryHref, primaryButton?.buttonType)}
                   />
                 </div>
-              ) : null}
+              ) : null} */}
             </div>
           </div>
         </div>

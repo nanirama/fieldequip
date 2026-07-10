@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
- 
+import { cache } from "react";
 import BaseLayout from "@/src/components/BaseLayout";
 import CaseStudyGrowthCtaBanner, {
   CASE_STUDY_CONTENT_ANCHOR_ID,
@@ -29,7 +29,11 @@ import CaseStudyWideImage, {
 import { seoGenerateMetadata } from "@/src/components/Seo";
 import OtherCaseStudies from "@/src/components/CaseStudies/OtherCaseStudies";
 import type { OtherCaseStudyListItem } from "@/src/components/CaseStudies/OtherCaseStudyCard";
-import { loadCaseStudies, loadCaseStudy, loadCaseStudySlugs } from "@/src/sanity/loader/loadQuery";
+import { loadCaseStudies, loadCaseStudy, loadCaseStudySlugs, loadHeader } from "@/src/sanity/loader/loadQuery";
+import JsonLd from "@/src/components/JsonLd";
+import { buildBreadcrumbs, slugToLabel } from "@/lib/schema";
+
+const getHeader = cache(loadHeader)
  
 function formatLastUpdated(iso?: string) {
   if (!iso) return null;
@@ -76,7 +80,9 @@ type CaseStudyPageProps = {
 export async function generateStaticParams() {
   const rows = await loadCaseStudySlugs();
   const data = rows.data as { slug?: string }[] | null | undefined;
-  return (data ?? []).filter((row) => Boolean(row?.slug)).map((row) => ({ slug: row.slug as string }));
+  const params = (data ?? []).filter((row) => Boolean(row?.slug)).map((row) => ({ slug: row.slug as string }));
+  if (!params.length) return [{ slug: '__placeholder' }];
+  return params;
 }
  
 export async function generateMetadata({ params }: CaseStudyPageProps): Promise<Metadata> {
@@ -101,10 +107,11 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
 }
  export default async function CaseStudyDetailPage({ params }: CaseStudyPageProps) {
   const { slug } = await params;
-  const [result, listingResult] = await Promise.all([loadCaseStudy(slug), loadCaseStudies()]);
+  const [result, listingResult, headerResult] = await Promise.all([loadCaseStudy(slug), loadCaseStudies(),  getHeader()]);
   const data = result.data as CaseStudyDetailDoc | null | undefined;
   const allStudies = (listingResult.data as OtherCaseStudyListItem[] | null | undefined) ?? [];
   const otherCaseStudies = allStudies.filter((c) => c.slug && c.slug !== slug);
+  const settings = headerResult.data ?? {}
 
   if (!data) {
     notFound();
@@ -116,7 +123,13 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
   const lastUpdated = formatLastUpdated(data._updatedAt);
  
   return (
-    <BaseLayout layout="light">
+    <>
+      <JsonLd schema={buildBreadcrumbs([
+        { label: "Home", href: "/" },
+        { label: "Case Studies", href: "/case-studies" },
+        { label: data.name || slugToLabel(slug), href: `/case-study/${slug}` },
+      ])} />
+      <BaseLayout layout="light" settings={settings}>
       <section className="mx-auto max-w-7xl pt-14 sm:pt-16 mt-20 px-4 lg:pt-24">
         {showMetaPill ? (
           <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full bg-[#EAEEF1] px-4 py-2 text-xs font-medium text-[#020210]/80 sm:text-sm">
@@ -183,6 +196,7 @@ export async function generateMetadata({ params }: CaseStudyPageProps): Promise<
       />
  
       <OtherCaseStudies items={otherCaseStudies} />
-    </BaseLayout>
+      </BaseLayout>
+    </>
   );
 }
