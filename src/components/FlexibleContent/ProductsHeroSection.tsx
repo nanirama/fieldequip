@@ -49,7 +49,7 @@ interface ProductHeroSectionProps {
 const descriptionComponents: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p>
+      <p className="text-base text-gray-600 sm:text-lg">
         {children}
       </p>
     ),
@@ -132,10 +132,10 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
       ?.quality(50)
       ?.url() ?? imageUrl;
 
-  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
+  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "#";
   const secondaryHref = isValidHref(secondaryButton?.url)
     ? secondaryButton.url.trim()
-    : "";
+    : "#";
 
   const primaryLabel =
     primaryButton?.label?.trim() || (primaryHref ? "Schedule a Demo" : "");
@@ -205,14 +205,14 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
           ) : null}
 
 
-          {(primaryHref || secondaryHref) && (
+          {(primaryLabel || secondaryLabel) && (
             <div className="mt-4 flex w-full max-w-xl flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              {primaryHref && primaryLabel && (
+              {primaryLabel && (
                 <ButtonComponent variant="primary" className="w-full sm:w-auto" href={primaryHref}>
                   {primaryLabel}
                 </ButtonComponent>
               )}
-              {secondaryLabel && secondaryHref && (
+              {secondaryLabel && (
                 <ButtonComponent variant="secondarytrnsparentWhiteBorder" className="w-full sm:w-auto" href={secondaryHref}>
                   {secondaryLabel}
                 </ButtonComponent>

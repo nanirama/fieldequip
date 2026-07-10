@@ -44,6 +44,19 @@ import type { CaseStudyListDocument } from '@/src/sanity/lib/mapCaseStudiesForSe
 
 // ── Core cache function ───────────────────────────────────────────────────────
 
+async function safeFetch(query: string, params: Record<string, unknown> = {}) {
+  let retries = 3;
+  while (retries > 0) {
+    try {
+      return await client.fetch(query, params)
+    } catch (error) {
+      retries -= 1;
+      if (retries === 0) throw error;
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+  }
+}
+
 async function cachedFetch(
   query: string,
   params: Record<string, unknown>,
@@ -52,7 +65,7 @@ async function cachedFetch(
   'use cache'
   cacheTag(...tags)
   cacheLife({ stale: 86400, revalidate: 3600, expire: 604800 })
-  return client.fetch(query, params)
+  return safeFetch(query, params)
 }
 
 async function cached(
@@ -82,31 +95,31 @@ export const loadProduct = (slug: string) =>
   cached(productQuery, { slug }, ['product', `product:${slug}`])
 
 export const loadProductSlugs = () =>
-  client.fetch(productSlugsQuery, {})
+  safeFetch(productSlugsQuery, {})
 
 export const loadPage = (slug: string) =>
   cached(pageQuery, { slug }, ['page', `page:${slug}`])
 
 export const loadPageSlugs = () =>
-  client.fetch(pageSlugsQuery, {})
+  safeFetch(pageSlugsQuery, {})
 
 export const loadLegalPage = (slug: string) =>
   cached(legalPageQuery, { slug }, ['legalPage', `legalPage:${slug}`])
 
 export const loadLegalPageSlugs = () =>
-  client.fetch(legalPageSlugsQuery, {})
+  safeFetch(legalPageSlugsQuery, {})
 
 export const loadLegalLandingPage = (slug: string) =>
   cached(legalLandingPageQuery, { slug }, ['legalLandingPages', `legalLandingPages:${slug}`])
 
 export const loadLegalLandingPageSlugs = () =>
-  client.fetch(legalLandingPageSlugsQuery, {})
+  safeFetch(legalLandingPageSlugsQuery, {})
 
 export const loadIndustry = (slug: string) =>
   cached(industriesQuery, { slug }, ['industries', `industries:${slug}`])
 
 export const loadIndustrySlugs = () =>
-  client.fetch(industriesSlugsQuery, {})
+  safeFetch(industriesSlugsQuery, {})
 
 export const loadAllIndustries = () =>
   cached(allIndustriesQuery, {}, ['industries'])
@@ -118,7 +131,7 @@ export const loadIntegration = (slug: string) =>
   cached(integrationsQuery, { slug }, ['integrations', `integrations:${slug}`])
 
 export const loadIntegrationSlugs = () =>
-  client.fetch(integrationsSlugsQuery, {})
+  safeFetch(integrationsSlugsQuery, {})
 
 export const loadAllIntegrations = () =>
   cached(allIntegrationsQuery, {}, ['integrations'])
@@ -142,7 +155,7 @@ export const loadWhitePaper = (slug: string) =>
   cached(whitePaperBySlugQuery, { slug }, ['whitePapers', `whitePapers:${slug}`])
 
 export const loadWhitePaperSlugs = () =>
-  client.fetch(whitePaperSlugsQuery, {})
+  safeFetch(whitePaperSlugsQuery, {})
 
 export const loadCaseStudies = () =>
   cached(caseStudiesQuery, {}, ['caseStudy'])
@@ -159,7 +172,7 @@ export const loadCaseStudy = (slug: string) =>
   cached(caseStudyBySlugQuery, { slug }, ['caseStudy', `caseStudy:${slug}`])
 
 export const loadCaseStudySlugs = () =>
-  client.fetch(caseStudySlugsQuery, {})
+  safeFetch(caseStudySlugsQuery, {})
 
 export const loadBlogPosts = () =>
   cached(blogPostsQuery, {}, ['post'])
@@ -171,13 +184,13 @@ export const loadBlogPost = (slug: string) =>
   cached(blogPostBySlugQuery, { slug }, ['post', `post:${slug}`])
 
 export const loadPostSlugs = () =>
-  client.fetch(blogPostSlugsQuery, {})
+  safeFetch(blogPostSlugsQuery, {})
 
 export const loadConversionPage = (slug: string) =>
   cached(conversionPagesQuery, { slug }, ['conversionPages', `conversionPages:${slug}`])
 
 export const loadConversionPageSlugs = () =>
-  client.fetch(conversionPagesSlugsQuery, {})
+  safeFetch(conversionPagesSlugsQuery, {})
 
 export const loadAllProducts = () =>
   cached(allProductsQuery, {}, ['product'])
