@@ -150,7 +150,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   const image = data?.image;
   const imageWidthDesktop = data?.imageWidthDesktop ?? 800;
   const imageHeightDesktop = data?.imageHeightDesktop ?? 600;
-  const imageWidthMobile = data?.imageWidth ?? 640;
+  const imageWidthMobile = data?.imageWidth ?? 480;
   const imageAlt = image?.alt?.trim() || heading || "Product interface preview";
 
   // auto("format") lets Sanity CDN serve AVIF on Chrome/Edge/Firefox and WebP
@@ -171,7 +171,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
       ?.width(imageWidthMobile)
       ?.fit("max")
       ?.auto("format")
-      ?.quality(75)
+      ?.quality(50)
       ?.url() ?? imageUrl;
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
@@ -188,7 +188,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   // on Accept headers — we don't know the format at build time. The browser uses
   // its own Accept header in the preload request, matches the same format the
   // <img> will request, so cache hit is guaranteed.
-  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)", imageSizes: "100vw" });
   preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
 
   return (
@@ -252,7 +252,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
                 <picture>
                   {/* No type="image/webp" — auto("format") means Sanity picks
                       AVIF/WebP based on Accept headers; type would lock us to WebP */}
-                  <source media="(max-width: 639px)" srcSet={imageUrlMobile} />
+                  <source media="(max-width: 639px)" srcSet={imageUrlMobile} sizes="100vw" />
                   <source media="(min-width: 640px)" srcSet={imageUrl} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -263,6 +263,8 @@ export default function FeaturesHeroSection({ data, page }: Props) {
                     className="h-auto w-full object-cover object-top"
                     fetchPriority="high"
                     loading="eager"
+                    decoding="async"
+                    sizes="(max-width: 639px) 100vw, 50vw"
                     draggable={false}
                   />
                 </picture>
