@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface HubSpotFormProps {
     portalId?: string;
@@ -25,9 +25,37 @@ export default function HubSpotForm({
     minHeight = "520px",
 }: HubSpotFormProps) {
     // if(page==='get-a-quote'){
-    //    formId = "0c89895f-8397-4dff-9e5c-7f5766fda717" 
+    //    formId = "0c89895f-8397-4dff-9e5c-7f5766fda717"
     // }
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [shouldLoad, setShouldLoad] = useState(false);
+
+    // Only load the HubSpot embed once the form is about to enter the viewport.
+    // The form sits below the fold, so this keeps its heavy 3rd-party script off
+    // the main thread during initial load / the LCP window.
     useEffect(() => {
+        if (shouldLoad) return;
+        const el = rootRef.current;
+        if (!el) return;
+        if (typeof IntersectionObserver === "undefined") {
+            setShouldLoad(true);
+            return;
+        }
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((e) => e.isIntersecting)) {
+                    setShouldLoad(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: "300px" }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [shouldLoad]);
+
+    useEffect(() => {
+        if (!shouldLoad) return;
         const loadForm = () => {
             if (window.hbspt) {
                 window.hbspt.forms.create({
@@ -112,10 +140,10 @@ export default function HubSpotForm({
         } else {
             loadForm();
         }
-    }, [portalId, formId, region]);
+    }, [shouldLoad, portalId, formId, region]);
 
     return (
-        <div className="min-w-0  p-6 sm:p-8 hs-custom ">
+        <div ref={rootRef} className="min-w-0  p-6 sm:p-8 hs-custom ">
             {(title || description) && (
                 <div>
                     {title && (
