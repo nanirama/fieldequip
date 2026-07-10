@@ -1,19 +1,16 @@
 import { Suspense, cache } from "react";
-import type { ReactElement } from "react";
+import type { ComponentType, ReactElement } from "react";
+import dynamic from "next/dynamic";
 import type { SanityImage } from "@/src/types/sanity-image";
 
 import HomeHeroSection from "./Home/HomeHeroSection";
-import HomeStatsSection from "./Home/HomeStatsSection";
 import HomeRoleSection from "./Home/HomeRoleSection";
 import NoMiddlemenSection from "./Home/NoMiddlemenSection";
-import ClientLogosSection from "./ClientLogosSection";
 import CaseStudiesSection from "./CaseStudiesSection";
 import CtaSection from "./CtaSection";
 import MediaContentSection from "./MediaContentSection";
 import ProductHeroSection from "./ProductsHeroSection";
-import FeatureGridSection from "./FeatureGridSection";
 import PlatformDeepDiveSection from "./PlatformDeepDiveSection";
-import FaqSection from "./FaqSection";
 import CtaSectionDark from "./CtaSectionDark";
 import FeaturesCapabilitiesSection from "./FeaturesCapabilitiesSection";
 import FeaturesHeroSection from "./FeaturesHeroSection";
@@ -36,13 +33,11 @@ import IntegrationsSection from "./IntegrationsSection";
 import PageImageHeroSection from "./PageImageHeroSection";
 import CoreCapabilitiesSection from "./CoreCapabilitiesSection";
 import OutcomeSplitSection from "./OutcomeSplitSection";
-import VideoTestimonialsSection from "./VideoTestimonialsSection";
 import ImageOnlySection, { type ImageOnlySectionData } from "./ImageOnlySection";
 import IndustriesHeroSection from "./IndustriesHeroSection";
 import BuiltForRemoteSection from "./BuiltForRemoteSection";
 import ContactSection from "./ContactSection";
 import ScheduleDemoSection from "./ScheduleDemoSection";
-import RoiCalculatorSection from "./RoiCalculatorSection";
 import WhitePaperHeroSection from "./WhitePaperHeroSection";
 import WhitePaperFormSection from "./WhitePaperFormSection";
 import WhitePaperIntroSection from "./WhitePaperIntroSection";
@@ -161,7 +156,18 @@ type SectionComponentProps = {
   page?: string;
 };
 
-const sectionComponents: Record<string, (props: SectionComponentProps) => ReactElement> = {
+// Heavy client-component sections are code-split with next/dynamic so their JS
+// only ships on pages where the section is actually rendered — not in every
+// page's First Load JS. ssr stays true (default) → server HTML is unchanged, so
+// no SEO/LCP/CLS regression; only the client hydration chunk is deferred/removed.
+const HomeStatsSection = dynamic(() => import("./Home/HomeStatsSection")) as ComponentType<SectionComponentProps>;
+const ClientLogosSection = dynamic(() => import("./ClientLogosSection")) as ComponentType<SectionComponentProps>;
+const FeatureGridSection = dynamic(() => import("./FeatureGridSection")) as ComponentType<SectionComponentProps>;
+const FaqSection = dynamic(() => import("./FaqSection")) as ComponentType<SectionComponentProps>;
+const VideoTestimonialsSection = dynamic(() => import("./VideoTestimonialsSection")) as ComponentType<SectionComponentProps>;
+const RoiCalculatorSection = dynamic(() => import("./RoiCalculatorSection")) as ComponentType<SectionComponentProps>;
+
+const sectionComponents: Record<string, ComponentType<SectionComponentProps>> = {
   homeHeroSection: HomeHeroSection,
   homeStatsSection: HomeStatsSection,
   homeRolesSection: HomeRoleSection as (props: SectionComponentProps) => ReactElement,
@@ -192,17 +198,17 @@ const sectionComponents: Record<string, (props: SectionComponentProps) => ReactE
   pageImageHeroSection: PageImageHeroSection as (props: SectionComponentProps) => ReactElement,
   coreCapabilitiesSection: CoreCapabilitiesSection as (props: SectionComponentProps) => ReactElement,
   outcomeSplitSection: OutcomeSplitSection as (props: SectionComponentProps) => ReactElement,
-  videoTestimonialsSection: VideoTestimonialsSection as (props: SectionComponentProps) => ReactElement,
+  videoTestimonialsSection: VideoTestimonialsSection,
   imageOnlySection: ImageOnlySection as (props: SectionComponentProps) => ReactElement,
-  featureGridSection: FeatureGridSection as (props: SectionComponentProps) => ReactElement,
+  featureGridSection: FeatureGridSection,
   industriesHeroSection: IndustriesHeroSection as (props: SectionComponentProps) => ReactElement,
   builtForRemoteSection: BuiltForRemoteSection as (props: SectionComponentProps) => ReactElement,
   featuresCapabilitiesSection: FeaturesCapabilitiesSection as (props: SectionComponentProps) => ReactElement,
   contactSection: ContactSection as (props: SectionComponentProps) => ReactElement,
   scheduleDemoSection: ScheduleDemoSection as (props: SectionComponentProps) => ReactElement,
-  roiCalculatorSection: RoiCalculatorSection as (props: SectionComponentProps) => ReactElement,
+  roiCalculatorSection: RoiCalculatorSection,
   platformDeepDiveSection: PlatformDeepDiveSection as (props: SectionComponentProps) => ReactElement,
-  faqSection: FaqSection as (props: SectionComponentProps) => ReactElement,
+  faqSection: FaqSection,
   whitePaperHeroSection: WhitePaperHeroSection as (props: SectionComponentProps) => ReactElement,
   whitePaperFormSection: WhitePaperFormSection as (props: SectionComponentProps) => ReactElement,
   whitePaperIntroSection: WhitePaperIntroSection as (props: SectionComponentProps) => ReactElement,
