@@ -18,7 +18,14 @@ function isValidHref(url: unknown): url is string {
 
 /** Matches Sanity image shape for `urlForImage` */
 type ProductHeroImage = {
-  asset?: { _ref?: string };
+  asset?: { 
+    _ref?: string;
+    metadata?: {
+      dimensions?: {
+        aspectRatio?: number;
+      }
+    }
+  };
   alt?: string;
 };
 
@@ -119,10 +126,10 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
 
   const imageUrlMobile =
     urlForImage(image)
-      ?.width(imageWidthMobile)
+      ?.width(480)
       ?.fit("max")
       ?.auto("format")
-      ?.quality(60)
+      ?.quality(50)
       ?.url() ?? imageUrl;
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
@@ -220,7 +227,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
               <picture>
                 {/* No type="image/webp" — auto("format") means Sanity picks
                     AVIF/WebP based on Accept headers; type would lock us to WebP */}
-                <source media="(max-width: 639px)" srcSet={imageUrlMobile} />
+                <source media="(max-width: 639px)" sizes="100vw" srcSet={imageUrlMobile} />
                 <source media="(min-width: 640px)" srcSet={imageUrl} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -232,6 +239,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
                   fetchPriority="high"
                   loading="eager"
                   draggable={false}
+                  sizes="(max-width: 639px) 100vw, 50vw"
                 />
               </picture>
             </figure>
