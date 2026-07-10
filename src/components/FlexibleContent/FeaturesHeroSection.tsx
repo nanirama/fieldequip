@@ -153,25 +153,25 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   const imageWidthMobile = data?.imageWidth ?? 640;
   const imageAlt = image?.alt?.trim() || heading || "Product interface preview";
 
-  // auto("format") lets Sanity CDN serve AVIF on Chrome/Edge/Firefox and WebP
-  // on Safari — typically 20-30% smaller than WebP alone for the same quality.
-  // fit("max") preserves natural aspect ratio.
-  // quality(75) desktop, quality(75) mobile — good balance for hero images.
+  // Explicit WebP via ?fm=webp: format baked into URL so preload and <img>
+  // fetch share the same browser cache entry. auto("format") triggers Vary: Accept
+  // on Sanity's CDN; preload scanner and <img> can differ on AVIF support, causing
+  // a cache miss that downloads the image twice.
   const imageUrl =
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
         ?.fit("max")
-        ?.auto("format")
+        ?.format("webp")
         ?.quality(75)
         ?.url()) || "/images/hero-image.png";
 
   const imageUrlMobile =
     urlForImage(image)
-      ?.width(480)
+      ?.width(imageWidthMobile)
       ?.fit("max")
-      ?.auto("format")
-      ?.quality(50)
+      ?.format("webp")
+      ?.quality(75)
       ?.url() ?? imageUrl;
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
@@ -184,12 +184,8 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   const secondaryLabel =
     secondaryButton?.label?.trim() || (secondaryHref ? "Learn more" : "");
 
-  // No `type` on preload: auto("format") means Sanity serves AVIF or WebP based
-  // on Accept headers — we don't know the format at build time. The browser uses
-  // its own Accept header in the preload request, matches the same format the
-  // <img> will request, so cache hit is guaranteed.
-  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
-  preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", type: "image/webp", media: "(max-width: 639px)" });
+  preload(imageUrl, { as: "image", fetchPriority: "high", type: "image/webp", media: "(min-width: 640px)" });
 
   return (
     <section
@@ -225,11 +221,11 @@ export default function FeaturesHeroSection({ data, page }: Props) {
               {heading}
             </h2>
 
-            {description && description.length > 0 ? (
+            {description && (
               <div className="mt-5 max-w-xl space-y-3 sm:mt-6 leading-[150%] text-[#020210]/70">
                 <PortableText value={description} components={ptComponents} />
               </div>
-            ) : null}
+            )}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-[14px] mt-4">
               {primaryLabel && (
@@ -250,13 +246,11 @@ export default function FeaturesHeroSection({ data, page }: Props) {
             <figure className="mx-auto w-full max-w-xl lg:mx-0 lg:max-w-none">
               <div className="overflow-hidden rounded-xl">
                 <picture>
-                  {/* No type="image/webp" — auto("format") means Sanity picks
-                      AVIF/WebP based on Accept headers; type would lock us to WebP */}
-                  <source media="(max-width: 639px)" sizes="100vw" srcSet={imageUrlMobile} />
-                  <source media="(min-width: 640px)" srcSet={imageUrl} />
+                  <source media="(max-width: 639px)" srcSet={imageUrlMobile} type="image/webp" />
+                  <source media="(min-width: 640px)" srcSet={imageUrl} type="image/webp" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={imageUrl}
+                    src={imageUrlMobile}
                     alt={imageAlt}
                     width={imageWidthDesktop}
                     height={imageHeightDesktop}
@@ -264,7 +258,6 @@ export default function FeaturesHeroSection({ data, page }: Props) {
                     fetchPriority="high"
                     loading="eager"
                     draggable={false}
-                    sizes="(max-width: 639px) 100vw, 50vw"
                   />
                 </picture>
               </div>

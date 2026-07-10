@@ -1,10 +1,10 @@
 import Link from "next/link";
-import Image from "next/image";
+import { preload } from "react-dom";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-import { ButtonComponent } from "../ButtonComponent";
 import { urlForImage } from "@/src/sanity/lib/utils";
 import { ProductHeroDecorations } from "./ProductHeroDecorations";
+import { ButtonComponent } from "../ButtonComponent";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Button {
@@ -18,14 +18,7 @@ function isValidHref(url: unknown): url is string {
 
 /** Matches Sanity image shape for `urlForImage` */
 type ProductHeroImage = {
-  asset?: { 
-    _ref?: string;
-    metadata?: {
-      dimensions?: {
-        aspectRatio?: number;
-      }
-    }
-  };
+  asset?: { _ref?: string };
   alt?: string;
 };
 
@@ -49,7 +42,7 @@ interface ProductHeroSectionProps {
 const descriptionComponents: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="text-base text-gray-600 sm:text-lg">
+      <p>
         {children}
       </p>
     ),
@@ -106,36 +99,39 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   const secondaryButton = data?.secondaryButton;
   const image = data?.image;
   const imageWidthMobile = data?.imageWidth ?? 640;
+  const imageHeightMobile = data?.imageHeight ?? 640;
   const imageWidthDesktop = data?.imageWidthDesktop ?? 860;
   const imageHeightDesktop = data?.imageHeightDesktop ?? Math.round(860 / (image?.asset?.metadata?.dimensions?.aspectRatio ?? 1));
 
   const imageAlt = image?.alt?.trim() || heading || "FieldEquip product interface";
 
-  // auto("format") lets Sanity CDN serve AVIF on Chrome/Edge/Firefox and WebP
-  // on Safari — typically 20-30% smaller than WebP alone for the same quality.
-  // fit("max") preserves natural aspect ratio; no height param needed.
-  // quality(75) is visually indistinguishable from 90 for hero images.
+  // Explicit WebP via ?fm=webp: the format is baked into the URL so the
+  // preload request and <img> fetch hit the same browser cache entry regardless
+  // of their Accept headers. auto("format") appends ?auto=format which triggers
+  // Vary: Accept on Sanity's CDN — the preload scanner and the <img> fetch can
+  // send different Accept headers (AVIF vs WebP), producing a cache miss.
   const imageUrl =
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
         ?.fit("max")
-        ?.auto("format")
+        ?.format("webp")
         ?.quality(75)
         ?.url()) || "/images/hero-image.png";
 
   const imageUrlMobile =
     urlForImage(image)
-      ?.width(480)
+      ?.width(imageWidthMobile)
+      ?.height(imageHeightMobile)
       ?.fit("max")
-      ?.auto("format")
-      ?.quality(50)
+      ?.format("webp")
+      ?.quality(40)
       ?.url() ?? imageUrl;
 
-  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "#";
+  const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)
     ? secondaryButton.url.trim()
-    : "#";
+    : "";
 
   const primaryLabel =
     primaryButton?.label?.trim() || (primaryHref ? "Schedule a Demo" : "");
@@ -143,10 +139,15 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
     secondaryButton?.label?.trim() ||
     (secondaryHref ? "Build Your Business Case" : "");
 
+  // type: "image/webp" lets the browser skip the preload on the rare browser
+  // that doesn't support WebP (it would skip the <source> too, so no wasted fetch).
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", type: "image/webp", media: "(max-width: 639px)", imageSizes: "100vw" });
+  preload(imageUrl, { as: "image", fetchPriority: "high", type: "image/webp", media: "(min-width: 640px)" });
+
   return (
     <section
       aria-labelledby="product-hero-heading"
-      className="relative mx-auto w-full max-w-[1640px] overflow-x-hidden overflow-y-hidden bg-white"
+      className="min-h-screen relative mx-auto w-full max-w-[1640px] overflow-x-hidden overflow-y-hidden bg-white"
     >
       {/* Atmosphere: soft teal wash + dot grid on the right (design) */}
       {/* <div
@@ -162,7 +163,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
           of image data doesn't compete with the LCP image fetch. Hidden on mobile
           at the component level (md:block) — no server-side element at all during
           the LCP window. */}
-      <div className="hidden md:block invisible md:visible">
+      <div className="hidden md:block">
         <ProductHeroDecorations />
       </div>
 
@@ -188,46 +189,52 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
             {heading}
           </h2>
 
-          {description?.length ? (
+          {description && (
             <div className="mt-3 max-w-xl space-y-3 sm:mt-6">
               <PortableText
                 value={description}
                 components={descriptionComponents}
               />
             </div>
-          ) : null}
+          )}
 
 
-          {(primaryLabel || secondaryLabel) && (
+
+          {(primaryHref && primaryLabel) || (secondaryLabel && secondaryHref) ? (
             <div className="mt-4 flex w-full max-w-xl flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              {primaryLabel && (
-                <ButtonComponent variant="primary" className="w-full sm:w-auto" href={primaryHref}>
+              {primaryHref && primaryLabel && (
+                <ButtonComponent variant="primary" href={primaryHref} className="w-full sm:w-auto">
                   {primaryLabel}
                 </ButtonComponent>
               )}
-              {secondaryLabel && (
-                <ButtonComponent variant="secondarytrnsparentWhiteBorder" className="w-full sm:w-auto" href={secondaryHref}>
+              {secondaryLabel && secondaryHref && (
+                <ButtonComponent variant="secondarytrnsparentWhiteBorder" href={secondaryHref} className="w-full sm:w-auto">
                   {secondaryLabel}
                 </ButtonComponent>
               )}
             </div>
-          )}
-        </div>
+          ) : null}
+          </div>
 
-        {/* Image: 50% column — routed through Next.js /_next/image for Vercel Edge cache */}
+        {/* Image: 50% column */}
         <div className="order-2 flex w-full min-w-0 items-center justify-center px-4 sm:px-6 lg:flex-[0_0_50%] lg:justify-end lg:pl-6 lg:pr-0">
           <figure className="z-20 w-full max-w-lg sm:max-w-2xl lg:max-w-none">
-            <Image
-              src={imageUrl}
-              alt={imageAlt}
-              width={imageWidthDesktop}
-              height={imageHeightDesktop}
-              className="w-full h-auto block"
-              priority={true}
-              sizes="(max-width: 639px) 100vw, 50vw"
-              quality={60}
-            />
-          </figure>
+              <picture>
+                <source media="(max-width: 639px)" srcSet={imageUrlMobile} type="image/webp" sizes="100vw" />
+                <source media="(min-width: 640px)" srcSet={imageUrl} type="image/webp" />
+
+                <img
+                  src={imageUrlMobile}
+                  alt={imageAlt}
+                  width={imageWidthMobile}
+                  height={imageHeightMobile}
+                  className="w-full h-auto block"
+                  fetchPriority="high"
+                  loading="eager"
+                  draggable={false}
+                />
+              </picture>
+            </figure>
         </div>
       </div>
     </section>

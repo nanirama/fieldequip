@@ -94,8 +94,8 @@ export const productHeroSectionFragment = `
     image,
     "imageWidthDesktop": 860,
     "imageHeightDesktop": round(860 / image.asset->metadata.dimensions.aspectRatio),
-    "imageWidth": 640,
-    "imageHeight": round(640 / image.asset->metadata.dimensions.aspectRatio),
+    "imageWidth": 480,
+    "imageHeight": round(480 / image.asset->metadata.dimensions.aspectRatio),
   }
 `
 

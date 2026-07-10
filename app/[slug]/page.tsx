@@ -68,42 +68,32 @@ type SlugMatch =
 
 const getHeader = cache(loadHeader)
 
-// React.cache deduplicates this across generateMetadata + SlugPage within the same
-// render cycle. All 6 loaders fire in parallel — each has its own 'use cache'
-// boundary so Sanity is only hit once per slug per cache period regardless of type.
+// React.cache deduplicates this across generateMetadata + SlugPage
+// in the same render cycle — only one sequential loader chain runs per slug.
 const loadSlugContent = cache(async (slug: string): Promise<SlugMatch | null> => {
-  const [
-    productResult,
-    pageResult,
-    legalResult,
-    postResult,
-    industryResult,
-    conversionResult,
-  ] = await Promise.all([
-    loadProduct(slug),
-    loadPage(slug),
-    loadLegalPage(slug),
-    loadBlogPost(slug),
-    loadIndustry(slug),
-    loadConversionPage(slug),
-  ]);
-
-  // Priority resolution — order matches the original waterfall priority
+  const productResult = await loadProduct(slug);
   const product = productResult.data as ContentDoc | null | undefined;
   if (product) return { type: "product", product };
-
+  
+  const pageResult = await loadPage(slug);
   const page = pageResult.data as ContentDoc | null | undefined;
   if (page) return { type: "page", page };
 
+  const legalResult = await loadLegalPage(slug);
   const legalPage = legalResult.data as ContentDoc | null | undefined;
   if (legalPage) return { type: "legal", legalPage };
 
+  
+
+  const postResult = await loadBlogPost(slug);
   const post = postResult.data as PostDoc | null | undefined;
   if (post?.slug) return { type: "post", post };
 
+  const industryResult = await loadIndustry(slug);
   const industry = industryResult.data as ContentDoc | null | undefined;
   if (industry) return { type: "industry", industry };
 
+  const conversionResult = await loadConversionPage(slug);
   const conversionPage = conversionResult.data as ContentDoc | null | undefined;
   if (conversionPage) return { type: "conversion", conversionPage };
 

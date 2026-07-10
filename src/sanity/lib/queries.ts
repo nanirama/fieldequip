@@ -738,6 +738,18 @@ export const conversionPagesSlugsQuery = groq`
   }
 `
 
+// Lightweight discriminator: returns only `_type` for the first published
+// document that owns this slug, across all routable types. The `[slug]/page.tsx`
+// route uses this to identify which single loader to call, avoiding the cost of
+// deserializing all six full payloads on every warm-cache request.
+export const slugTypeQuery = groq`
+  *[
+    slug.current == $slug
+    && !(_id in path("drafts.**"))
+    && _type in ["product", "pages", "legalPages", "post", "industries", "conversionPages"]
+  ][0]{_type}
+`
+
 // All published FAQ documents — used to emit FAQPage structured data on pages
 // whose Sanity sections don't include a faqSection (e.g. the home page).
 export const allFaqsQuery = groq`

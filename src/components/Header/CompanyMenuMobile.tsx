@@ -83,7 +83,8 @@ function CompanyMenuMobileComponent({ className = "", menuTitle, menuDescription
           "absolute inset-0 z-[60] bg-white transition-opacity duration-200 overflow-hidden",
           isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
-        aria-hidden={!isMenuOpen}
+        // @ts-expect-error — inert is valid HTML but absent from React 18 types
+        inert={!isMenuOpen}
       >
         <nav
           id="company-mobile-drawer"
