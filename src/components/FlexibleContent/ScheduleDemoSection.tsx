@@ -3,7 +3,10 @@ import { PortableText } from "next-sanity";
 import type { PortableTextBlock } from "@portabletext/types";
 import type { SanityImage } from "@/src/types/sanity-image";
 import { urlForImage } from "@/src/sanity/lib/utils";
-import HubSpotForm from "./HubSpotForm";
+import dynamic from "next/dynamic";
+
+// Defer the heavy 3rd-party HubSpot form off the initial bundle.
+const HubSpotForm = dynamic(() => import("./HubSpotForm"));
 
 type ScheduleDemoBadge = {
   label?: string;

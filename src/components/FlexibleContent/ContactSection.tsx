@@ -1,5 +1,10 @@
 import Image from "next/image";
-import HubSpotForm from "./HubSpotForm";
+import dynamic from "next/dynamic";
+
+// The HubSpot form injects its own markup client-side and loads a heavy 3rd-party
+// script, so keep it out of the initial bundle and load it only when this section
+// renders.
+const HubSpotForm = dynamic(() => import("./HubSpotForm"));
 
 type BadgeImage = {
   alt?: string;
