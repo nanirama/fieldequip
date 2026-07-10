@@ -188,7 +188,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   // on Accept headers — we don't know the format at build time. The browser uses
   // its own Accept header in the preload request, matches the same format the
   // <img> will request, so cache hit is guaranteed.
-  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)", imageSizes: "100vw" });
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
   preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
 
   return (
@@ -265,7 +265,6 @@ export default function FeaturesHeroSection({ data, page }: Props) {
                     loading="eager"
                     draggable={false}
                     sizes="(max-width: 639px) 100vw, 50vw"
-                    decoding="async"
                   />
                 </picture>
               </div>

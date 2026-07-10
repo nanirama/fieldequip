@@ -69,7 +69,7 @@ export default function RootLayout({
         )}
         
         {/* Sanity image CDN */}
-        <link rel="preconnect" href="https://cdn.sanity.io" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://cdn.sanity.io" />
         <link rel="dns-prefetch" href="https://cdn.sanity.io" />
         {/* Google Analytics */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
