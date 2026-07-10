@@ -1,25 +1,43 @@
+import { toAbsolutePageUrl } from "@/src/utils/siteUrl";
+
+export type Crumb = { label: string; href: string };
+
+/**
+ * Converts a URL slug to a human-readable label.
+ *
+ * "time-management"          → "Time Management"
+ * "oil-and-gas"              → "Oil and Gas"
+ * "geofenced-clock-events"   → "Geofenced Clock Events"
+ */
 export function slugToLabel(slug: string): string {
-  if (!slug) return '';
   return slug
-    .split('-')
+    .split("-")
+    .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
-export type BreadcrumbItem = {
-  label: string;
-  href: string;
-};
+/**
+ * Builds a valid Schema.org BreadcrumbList JSON-LD object.
+ *
+ * - Filters out crumbs whose label or href is empty/whitespace.
+ * - Position values are always sequential (1-based).
+ * - All href values are resolved to absolute canonical URLs with trailing slash.
+ * - Passes Google Rich Results Test and Schema.org validation.
+ */
+export function buildBreadcrumbs(crumbs: Crumb[]) {
+  const valid = crumbs.filter(
+    (c) => c.label.trim().length > 0 && c.href.trim().length > 0,
+  );
 
-export function buildBreadcrumbs(items: BreadcrumbItem[]) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: items.map((item, index) => ({
+    itemListElement: valid.map((crumb, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      name: item.label,
-      item: `https://www.fieldequip.com${item.href === '/' ? '' : item.href}`
-    }))
+      name: crumb.label.trim(),
+      item: toAbsolutePageUrl(crumb.href),
+    })),
   };
 }
