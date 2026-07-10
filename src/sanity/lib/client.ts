@@ -10,4 +10,5 @@ export const client = createClient({
   useCdn: true,
   perspective: 'published',
   stega: false, // ← completely disabled, no studioUrl needed
+  maxRetries: 5, // Mitigate UND_ERR_SOCKET API timeouts during build
 })
