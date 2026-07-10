@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { preload } from "react-dom";
+import Image from "next/image";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { ButtonComponent } from "../ButtonComponent";
@@ -143,13 +143,6 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
     secondaryButton?.label?.trim() ||
     (secondaryHref ? "Build Your Business Case" : "");
 
-  // No `type` on preload: auto("format") means Sanity serves AVIF or WebP based
-  // on Accept headers — we don't know the format at build time. The browser uses
-  // its own Accept header in the preload request, matches the same format the
-  // <img> will request, so cache hit is guaranteed.
-  preload(imageUrlMobile, { as: "image", fetchPriority: "high", media: "(max-width: 639px)" });
-  preload(imageUrl, { as: "image", fetchPriority: "high", media: "(min-width: 640px)" });
-
   return (
     <section
       aria-labelledby="product-hero-heading"
@@ -221,28 +214,20 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
           )}
         </div>
 
-        {/* Image: 50% column */}
+        {/* Image: 50% column — routed through Next.js /_next/image for Vercel Edge cache */}
         <div className="order-2 flex w-full min-w-0 items-center justify-center px-4 sm:px-6 lg:flex-[0_0_50%] lg:justify-end lg:pl-6 lg:pr-0">
           <figure className="z-20 w-full max-w-lg sm:max-w-2xl lg:max-w-none">
-              <picture>
-                {/* No type="image/webp" — auto("format") means Sanity picks
-                    AVIF/WebP based on Accept headers; type would lock us to WebP */}
-                <source media="(max-width: 639px)" sizes="100vw" srcSet={imageUrlMobile} />
-                <source media="(min-width: 640px)" srcSet={imageUrl} />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageUrl}
-                  alt={imageAlt}
-                  width={imageWidthDesktop}
-                  height={imageHeightDesktop}
-                  className="w-full h-auto block"
-                  fetchPriority="high"
-                  loading="eager"
-                  draggable={false}
-                  sizes="(max-width: 639px) 100vw, 50vw"
-                />
-              </picture>
-            </figure>
+            <Image
+              src={imageUrl}
+              alt={imageAlt}
+              width={imageWidthDesktop}
+              height={imageHeightDesktop}
+              className="w-full h-auto block"
+              priority={true}
+              sizes="(max-width: 639px) 100vw, 50vw"
+              quality={60}
+            />
+          </figure>
         </div>
       </div>
     </section>
