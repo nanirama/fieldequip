@@ -100,7 +100,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   const image = data?.image;
   const imageWidthMobile = data?.imageWidth ?? 640;
   const imageWidthDesktop = data?.imageWidthDesktop ?? 860;
-  const imageHeightDesktop = data?.imageHeightDesktop ?? Math.round(860 / (image?.asset?.metadata?.dimensions?.aspectRatio ?? 1));
+  const imageHeightDesktop = data?.imageHeightDesktop ?? Math.round(860 / ((image?.asset as any)?.metadata?.dimensions?.aspectRatio ?? 1));
 
   const imageAlt = image?.alt?.trim() || heading || "FieldEquip product interface";
 
