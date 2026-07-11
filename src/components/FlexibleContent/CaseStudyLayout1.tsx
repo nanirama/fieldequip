@@ -1,12 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useRef } from "react";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-
-import { useSlickSlideFocusFix } from "@/src/hooks/useSlickSlideFocusFix";
+import { useCallback, useRef } from "react";
 
 export type CaseStudy = {
     slug?: string | null;
@@ -52,27 +47,21 @@ const defaultCaseStudies: CaseStudy[] = [
 
 ];
 
-const NextArrow = (props: { onClick?: () => void }) => {
-    const { onClick } = props;
-    return (
-        <div className="absolute sm:-top-24 -top-12 sm:right-6 left-16 sm:left-[inherit] w-[54px] h-[34px] group bg-[#E1E9F1] hover:bg-[#13A89E] hover:text-white rounded-[37px] cursor-pointer z-[40] flex items-center justify-center" onClick={onClick}>
-            <svg width="7" height="13" viewBox="0 0 7 13" fill="none" className="rotate-[180deg]" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.73038 11.55L1.04656 6.866C0.952538 6.77198 0.877957 6.66036 0.827073 6.53752C0.77619 6.41468 0.75 6.28301 0.75 6.15005C0.75 6.01709 0.77619 5.88542 0.827073 5.76258C0.877957 5.63974 0.952538 5.52812 1.04656 5.4341L5.73061 0.75005" stroke="#020210" className="group-hover:stroke-white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-        </div>
-    );
-};
+const NextArrow = ({ onClick }: { onClick?: () => void }) => (
+    <button type="button" aria-label="Next case study" onClick={onClick} className="absolute sm:-top-24 -top-12 sm:right-6 left-16 sm:left-[inherit] w-[54px] h-[34px] group bg-[#E1E9F1] hover:bg-[#13A89E] hover:text-white rounded-[37px] cursor-pointer z-[40] flex items-center justify-center">
+        <svg width="7" height="13" viewBox="0 0 7 13" fill="none" className="rotate-[180deg]" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.73038 11.55L1.04656 6.866C0.952538 6.77198 0.877957 6.66036 0.827073 6.53752C0.77619 6.41468 0.75 6.28301 0.75 6.15005C0.75 6.01709 0.77619 5.88542 0.827073 5.76258C0.877957 5.63974 0.952538 5.52812 1.04656 5.4341L5.73061 0.75005" stroke="#020210" className="group-hover:stroke-white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    </button>
+);
 
-const PrevArrow = (props: { onClick?: () => void }) => {
-    const { onClick } = props;
-    return (
-        <div className="absolute sm:-top-24 -top-12  sm:right-22 left-0 sm:left-[inherit] w-[54px] h-[34px] group bg-[#E1E9F1] hover:bg-[#13A89E] rounded-[37px] cursor-pointer z-[40] flex items-center justify-center" onClick={onClick}>
-            <svg width="7" height="13" viewBox="0 0 7 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5.73038 11.55L1.04656 6.866C0.952538 6.77198 0.877957 6.66036 0.827073 6.53752C0.77619 6.41468 0.75 6.28301 0.75 6.15005C0.75 6.01709 0.77619 5.88542 0.827073 5.76258C0.877957 5.63974 0.952538 5.52812 1.04656 5.4341L5.73061 0.75005" stroke="#020210" className="group-hover:stroke-white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-        </div>
-    );
-};
+const PrevArrow = ({ onClick }: { onClick?: () => void }) => (
+    <button type="button" aria-label="Previous case study" onClick={onClick} className="absolute sm:-top-24 -top-12  sm:right-22 left-0 sm:left-[inherit] w-[54px] h-[34px] group bg-[#E1E9F1] hover:bg-[#13A89E] rounded-[37px] cursor-pointer z-[40] flex items-center justify-center">
+        <svg width="7" height="13" viewBox="0 0 7 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5.73038 11.55L1.04656 6.866C0.952538 6.77198 0.877957 6.66036 0.827073 6.53752C0.77619 6.41468 0.75 6.28301 0.75 6.15005C0.75 6.01709 0.77619 5.88542 0.827073 5.76258C0.877957 5.63974 0.952538 5.52812 1.04656 5.4341L5.73061 0.75005" stroke="#020210" className="group-hover:stroke-white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    </button>
+);
 
 export default function CaseStudyLayout1({
     heading = "Proven in the Field",
@@ -83,32 +72,16 @@ export default function CaseStudyLayout1({
             ? caseStudiesProp
             : defaultCaseStudies;
 
-    const sliderRef = useRef<Slider>(null);
-    const slickWrapRef = useRef<HTMLDivElement>(null);
-    const { onInit, onReInit, afterChange: focusFix } = useSlickSlideFocusFix(slickWrapRef);
+    // Was react-slick (slidesToShow:1, arrows, no autoplay). Replaced with a native
+    // scroll-snap track: swipe works for free, and the arrows just scroll by one
+    // card width. Removing slick drops ~32KB of blocking JS from every page.
+    const scrollerRef = useRef<HTMLDivElement>(null);
 
-    const afterChange = useCallback((index: number) => {
-        focusFix(index);
-    }, [focusFix]);
-
-    const settings = useMemo(
-        () => ({
-        infinite: false,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        arrows: true,
-        dots: false,
-        autoplay: false,
-        speed: 600,
-        adaptiveHeight: true,
-        nextArrow: <NextArrow />,
-        prevArrow: <PrevArrow />,
-        onInit,
-        onReInit,
-        afterChange,
-    }),
-        [onInit, onReInit, afterChange],
-    );
+    const scrollByCard = useCallback((dir: 1 | -1) => {
+        const el = scrollerRef.current;
+        if (!el) return;
+        el.scrollBy({ left: dir * el.clientWidth, behavior: "smooth" });
+    }, []);
 
     return (
         <section
@@ -125,11 +98,20 @@ export default function CaseStudyLayout1({
                     {heading}
                 </h2>
 
-                {/* Slider */}
-                <div className="sm:mt-16 mt-20" ref={slickWrapRef}>
-                    <Slider ref={sliderRef} {...settings}>
+                {/* Slider (scroll-snap) */}
+                <div className="relative sm:mt-16 mt-20">
+                    {caseStudies.length > 1 && (
+                        <>
+                            <PrevArrow onClick={() => scrollByCard(-1)} />
+                            <NextArrow onClick={() => scrollByCard(1)} />
+                        </>
+                    )}
+                    <div
+                        ref={scrollerRef}
+                        className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    >
                         {caseStudies.map((item, index) => (
-                            <div key={item.slug ?? index} className="">
+                            <div key={item.slug ?? index} className="w-full shrink-0 snap-start">
 
                                 <div className="grid gap-10 lg:grid-cols-2">
 
@@ -180,7 +162,7 @@ export default function CaseStudyLayout1({
 
                             </div>
                         ))}
-                    </Slider>
+                    </div>
                 </div>
 
             </div>
