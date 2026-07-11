@@ -1,13 +1,5 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useRef } from "react";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-
-import { useSlickSlideFocusFix } from "@/src/hooks/useSlickSlideFocusFix";
 
 type Logo = {
     link?: string;
@@ -33,141 +25,54 @@ const fallbackLogos: Logo[] = [
     { logo: { url: "/images/logo9.webp", alt: "Client 9" } },
 ];
 
+function LogoItem({ logo }: { logo: Logo }) {
+    if (!logo.logo?.url) return null;
+    const img = (
+        <Image
+            src={logo.logo.url}
+            alt={logo.logo.alt || "client logo"}
+            width={160}
+            height={90}
+            style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
+            className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
+        />
+    );
+    return (
+        <div className="shrink-0 px-6">
+            <div className="flex h-[110px] items-center justify-center">
+                {logo.link ? (
+                    <Link href={logo.link} target="_blank" rel="noreferrer noopener">
+                        {img}
+                    </Link>
+                ) : (
+                    img
+                )}
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Server Component. The old ticker was react-slick with autoplaySpeed:0 + linear
+ * 5s transitions — i.e. a continuous marquee. That is a pure CSS animation, so it
+ * needs no JavaScript at all now: dropping react-slick/slick-carousel here (and
+ * from the other carousels) removes ~32KB of blocking script from every page.
+ * The strip is duplicated so translateX(-50%) loops seamlessly; the keyframes and
+ * the prefers-reduced-motion opt-out live in globals.css (fe-marquee).
+ */
 const ClientLogosSection = ({ data }: { data?: ClientLogosSectionData }) => {
     const logos = Array.isArray(data?.logos) && data.logos.length > 0 ? data.logos : fallbackLogos;
-
-    const slickWrapRef = useRef<HTMLDivElement>(null);
-    const { onInit, onReInit, afterChange } = useSlickSlideFocusFix(slickWrapRef);
-
-    const settings = useMemo(
-        () => ({
-            infinite: true,
-            slidesToShow: 7,       // desktop ≥ 1024 px
-            slidesToScroll: 1,
-            arrows: false,
-            dots: false,
-            autoplay: true,
-            autoplaySpeed: 0,      // fire next transition immediately
-            speed: 5000,           // 5 s transition → smooth continuous feel
-            cssEase: "linear",     // constant speed, no easing
-            pauseOnHover: false,
-            swipe: false,          // ticker — swipe conflicts with iOS page scroll
-            draggable: false,
-            //waitForAnimate: false, // no micro-pause between cycles on Safari
-            responsive: [
-                // tablet  768 px – 1023 px → 5 items
-                { breakpoint: 1024, settings: { slidesToShow: 5 } },
-                // mobile  < 768 px → 2 items (covers all iPhones & narrow windows)
-                { breakpoint: 768,  settings: { slidesToShow: 3 } },
-                { breakpoint: 600,  settings: { slidesToShow: 2 } },
-            ],
-            onInit,
-            onReInit,
-            afterChange,
-        }),
-        [onInit, onReInit, afterChange],
-    );
-
-    const msettings = useMemo(
-        () => ({
-            infinite: true,
-            slidesToShow: 2,       // desktop ≥ 1024 px
-            slidesToScroll: 1,
-            arrows: false,
-            dots: false,
-            autoplay: true,
-            autoplaySpeed: 0,      // fire next transition immediately
-            speed: 5000,           // 5 s transition → smooth continuous feel
-            cssEase: "linear",     // constant speed, no easing
-            pauseOnHover: false,
-            swipe: false,          // ticker — swipe conflicts with iOS page scroll
-            draggable: false,
-            //waitForAnimate: false, // no micro-pause between cycles on Safari
-            responsive: [
-                // tablet  768 px – 1023 px → 5 items
-                { breakpoint: 1024, settings: { slidesToShow: 3 } },
-                // mobile  < 768 px → 2 items (covers all iPhones & narrow windows)
-                { breakpoint: 768,  settings: { slidesToShow: 3 } },
-                { breakpoint: 600,  settings: { slidesToShow: 2 } },
-            ],
-            onInit,
-            onReInit,
-            afterChange,
-        }),
-        [onInit, onReInit, afterChange],
-    );
+    const strip = logos.concat(logos);
 
     return (
-        <>
-            <div className="w-full sm:pt-16 pt-10 pb-4" ref={slickWrapRef}>
-                <div className="md:hidden block">
-                    <Slider {...msettings}>
-                        {logos.concat(logos).map((logo, index) =>
-                            logo.logo?.url ? (
-                                <div key={index} className="px-6">
-                                    <div className="flex items-center justify-center h-[110px]">
-                                        {logo.link ? (
-                                            <Link href={logo.link} target="_blank" rel="noreferrer noopener">
-                                                <Image
-                                                    src={logo.logo.url}
-                                                    alt={logo.logo.alt || "client logo"}
-                                                    width={160}
-                                                    height={90}
-                                                    style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
-                                                    className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
-                                                />
-                                            </Link>
-                                        ) : (
-                                            <Image
-                                                src={logo.logo.url}
-                                                alt={logo.logo.alt || "client logo"}
-                                                width={160}
-                                                height={90}
-                                                style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
-                                                className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            ) : null
-                        )}
-                    </Slider>
-                </div>
-                <div className="hidden sm:block">
-                    <Slider {...settings}>
-                        {logos.concat(logos).map((logo, index) =>
-                            logo.logo?.url ? (
-                                <div key={index} className="px-6">
-                                    <div className="flex items-center justify-center h-[110px]">
-                                        {logo.link ? (
-                                            <Link href={logo.link} target="_blank" rel="noreferrer noopener">
-                                                <Image
-                                                    src={logo.logo.url}
-                                                    alt={logo.logo.alt || "client logo"}
-                                                    width={160}
-                                                    height={90}
-                                                    style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
-                                                    className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
-                                                />
-                                            </Link>
-                                        ) : (
-                                            <Image
-                                                src={logo.logo.url}
-                                                alt={logo.logo.alt || "client logo"}
-                                                width={160}
-                                                height={90}
-                                                style={{ width: "auto", height: "auto", maxWidth: "min(160px, 100%)", maxHeight: 90 }}
-                                                className="object-contain grayscale opacity-70 hover:opacity-100 transition-opacity"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                            ) : null
-                        )}
-                    </Slider>
-                </div>
+        <div className="w-full overflow-hidden pt-10 pb-4 sm:pt-16">
+            <div className="fe-marquee flex w-max items-center">
+                {strip.map((logo, index) => (
+                    <LogoItem key={index} logo={logo} />
+                ))}
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
+
 export default ClientLogosSection;

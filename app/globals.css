@@ -326,3 +326,15 @@ input[type="range"]::-moz-range-thumb {
     background-image: url("/images/globe-1.png");
   }
 }
+/* Client-logo marquee (replaces react-slick). The strip is duplicated in the
+   markup, so sliding it by -50% loops seamlessly. */
+@keyframes fe-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.fe-marquee {
+  animation: fe-marquee 40s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fe-marquee { animation: none; }
+}
