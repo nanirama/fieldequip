@@ -121,7 +121,8 @@ export default function CaseStudyLayout2({
         <section
             className="relative w-full pt-8 lg:pb-24 pb-8 overflow-hidden"
         >
-            <div className="absolute top-52 right-[23%] bg-[url('/images/casestudy2-shade1.png')] bg-no-repeat bg-contain z-40 w-[340px] h-[300px] " />
+            {/* Decorative shade — desktop only, so its PNG never downloads on mobile. */}
+            <div className="hidden md:block absolute top-52 right-[23%] bg-[url('/images/casestudy2-shade1.png')] bg-no-repeat bg-contain z-40 w-[340px] h-[300px] " />
 
             {/* <div className="absolute top-52 left-[23%]  bg-[url('/images/casestudy2-shade1.png')] bg-no-repeat bg-contain z-40 w-[340px] h-[300px] " /> */}
             <div className="blur-[300px] overflow-hidden pointer-events-none bg-[radial-gradient(ellipse_55%_50%_at_72%_38%,#1a4d2e_0%,#0d2e1a_40%,transparent_70%)] absolute top-52 left-[23%] bg-no-repeat bg-contain z-40 w-[340px] h-[300px]" />
