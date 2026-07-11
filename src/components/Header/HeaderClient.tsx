@@ -2,27 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { memo, useCallback, useEffect, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
-// The mobile menus are statically imported so their JS is bundled with
-// HeaderClient and available the instant the drawer opens — no chunk download
-// delay on first tap. Dynamic imports caused 1-3s blank menus on iPhone/MacBook.
-// The desktop mega-menus are no longer imported here at all: they arrive as the
-// `desktopNav` prop, already rendered by the Server Component, so their DOM never
-// enters the hydration tree.
+// All menus are statically imported so their JS is bundled with HeaderClient
+// and available the instant the page hydrates — no chunk download delay on
+// first hover/tap. Dynamic imports caused 1-3s blank menus on iPhone/MacBook.
 import ProductsMenuMobile from "./ProductsMenuMobile";
 import IndustriesMenuMobile from "./IndustriesMenuMobile";
 import CompanyMenuMobile from "./CompanyMenuMobile";
 import ResourcesMenuMobile from "./ResourcesMenuMobile";
+import ProductsMenuDesktop from "./ProductsMenuDesktop";
+import IndustriesMenuDesktop from "./IndustriesMenuDesktop";
+import CompanyMenuDesktop from "./CompanyMenuDesktop";
+import ResourcesMenuDesktop from "./ResourcesMenuDesktop";
 
 import type { SettingsMenuData } from "./menu-types";
 import type { HeaderProps } from "./index";
 
-type HeaderClientProps = HeaderProps & {
-  settings: SettingsMenuData;
-  /** Server-rendered mega-menu markup (see Header/index.tsx). */
-  desktopNav: ReactNode;
-};
+type HeaderClientProps = HeaderProps & { settings: SettingsMenuData };
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
@@ -34,7 +31,7 @@ function HamburgerIcon({ open }: { open: boolean }) {
   );
 }
 
-function HeaderClientComponent({ layout = "light", settings, desktopNav }: HeaderClientProps) {
+function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   // The mobile menu items are only mounted once the drawer is first opened, so
   // their (duplicate of the desktop nav) DOM doesn't get server-rendered and
@@ -137,9 +134,34 @@ function HeaderClientComponent({ layout = "light", settings, desktopNav }: Heade
             <Image src={logoSrc} alt="FieldEquip" width={187} height={35} priority className="h-auto" />
           </Link>
 
-          {/* ── Desktop nav — server-rendered panels, passed in as a prop ── */}
+          {/* ── Desktop nav — always in the DOM; hidden on mobile via Tailwind ── */}
           <nav aria-label="Main navigation" className="hidden lg:flex lg:flex-1 lg:justify-center">
-            <ul className="flex items-center gap-8">{desktopNav}</ul>
+            <ul className="flex items-center gap-8">
+              <ProductsMenuDesktop
+                layout={layout}
+                menuTitle={settings.productsTitle}
+                menuDescription={settings.productsDescription}
+                items={settings.productNav}
+              />
+              <IndustriesMenuDesktop
+                layout={layout}
+                menuTitle={settings.industriesTitle}
+                menuDescription={settings.industriesDescription}
+                industries={settings.industriesNav ?? []}
+              />
+              <CompanyMenuDesktop
+                layout={layout}
+                menuTitle={settings.companyTitle}
+                menuDescription={settings.companyDescription}
+                items={settings.companyNav}
+              />
+              <ResourcesMenuDesktop
+                layout={layout}
+                menuTitle={settings.resourcesTitle}
+                menuDescription={settings.resourcesDescription}
+                items={settings.resourcesNav}
+              />
+            </ul>
           </nav>
 
           <div className="flex items-center gap-3">
