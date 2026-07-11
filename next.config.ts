@@ -20,8 +20,12 @@ const nextConfig = withBundleAnalyzer({
 
   images: {
     formats: ["image/avif", "image/webp"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 20, 32, 48, 60, 64, 96, 128, 256, 384],
+    // Every entry here becomes another (long) Sanity URL inside each <img srcset>.
+    // With 8 device sizes + 10 image sizes the page was carrying ~305 Sanity URLs
+    // (~77KB of the 241KB markup) just in srcsets. Trimmed to the widths that are
+    // actually useful — mobile (640/828), tablet (1080) and desktop retina (1920).
+    deviceSizes: [640, 828, 1080, 1920],
+    imageSizes: [32, 64, 128, 256, 384],
     qualities: [20, 25, 50, 60, 65, 70, 72, 75, 78, 80, 82, 85, 86, 88, 90],
     remotePatterns: [
       { protocol: "https", hostname: "cdn.sanity.io" },
