@@ -19,32 +19,34 @@ export function GoogleAnalytics() {
   useEffect(() => {
     if (!GA_ID) return;
 
-    let idleId: number | undefined;
-    let timeoutId: number | undefined;
+    let done = false;
+    const events: (keyof WindowEventMap)[] = [
+      "scroll",
+      "pointerdown",
+      "keydown",
+      "touchstart",
+    ];
 
-    const start = () => {
-      const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
-      if (typeof w.requestIdleCallback === "function") {
-        idleId = w.requestIdleCallback(() => setReady(true));
-      } else {
-        timeoutId = window.setTimeout(() => setReady(true), 1500);
-      }
+    const fire = () => {
+      if (done) return;
+      done = true;
+      cleanup();
+      setReady(true);
     };
 
-    if (document.readyState === "complete") {
-      start();
-    } else {
-      window.addEventListener("load", start, { once: true });
+    // Fallback so a visitor who never interacts is still counted.
+    const timeoutId = window.setTimeout(fire, 10000);
+
+    function cleanup() {
+      window.clearTimeout(timeoutId);
+      for (const e of events) window.removeEventListener(e, fire);
     }
 
-    return () => {
-      window.removeEventListener("load", start);
-      const w = window as Window & { cancelIdleCallback?: (id: number) => void };
-      if (idleId !== undefined && typeof w.cancelIdleCallback === "function") {
-        w.cancelIdleCallback(idleId);
-      }
-      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-    };
+    for (const e of events) {
+      window.addEventListener(e, fire, { once: true, passive: true });
+    }
+
+    return cleanup;
   }, []);
 
   if (!GA_ID || !ready) return null;
