@@ -128,6 +128,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
         <div className="mx-auto mt-3.5 mb-2 flex md:h-16 h-12 max-w-7xl items-center justify-between px-4">
           <Link
             href="/"
+            prefetch={false}
             aria-label="FieldEquip — go to homepage"
             className="shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
           >
@@ -277,6 +278,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
         <div className="shrink-0 px-4 pt-2 pb-6">
           <Link
             href="/demo"
+            prefetch={false}
             onClick={closeMobile}
             className="flex w-full items-center justify-center rounded-full bg-teal-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-teal-400 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400"
           >
