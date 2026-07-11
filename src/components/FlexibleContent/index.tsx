@@ -288,10 +288,22 @@ const FlexibleContent = async ({
       return <Section data={sectionData} page={page} key={index} />;
     }
 
+    // Everything below the hero gets content-visibility:auto, so the browser
+    // skips style, layout and paint for it while it is off-screen. The markup
+    // stays in the HTML (crawlers still see it) but it no longer costs anything
+    // at first paint — which is what FCP, and with it the LCP element's render
+    // delay, was actually waiting on. contain-intrinsic-size reserves a plausible
+    // box so the scrollbar doesn't jump; `auto` makes the browser remember the
+    // real size once the section has been rendered.
     return (
-      <Suspense fallback={<SectionFallbackLoader />} key={index}>
-        <Section data={sectionData} page={page} />
-      </Suspense>
+      <div
+        key={index}
+        className="[content-visibility:auto] [contain-intrinsic-size:auto_800px]"
+      >
+        <Suspense fallback={<SectionFallbackLoader />}>
+          <Section data={sectionData} page={page} />
+        </Suspense>
+      </div>
     );
   });
 
