@@ -1,12 +1,6 @@
-import dynamic from "next/dynamic";
-import type { FeatureBlockData } from "@/src/components/FlexibleContent/FeaturesCapabilitiesClient";
-
-// Client child pulls in framer-motion; code-split it so that weight is deferred
-// out of the initial First Load JS and only hydrates when this section renders.
-// ssr stays true (default) so the markup is still server-rendered for crawlers.
-const FeaturesCapabilitiesClient = dynamic(
-  () => import("@/src/components/FlexibleContent/FeaturesCapabilitiesClient"),
-);
+import FeaturesCapabilitiesClient, {
+  type FeatureBlockData,
+} from "@/src/components/FlexibleContent/FeaturesCapabilitiesClient";
 
 interface Props {
   data?: {

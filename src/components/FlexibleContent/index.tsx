@@ -1,12 +1,17 @@
 import { Suspense, cache } from "react";
 import type { ComponentType, ReactElement } from "react";
-import dynamic from "next/dynamic";
 import type { SanityImage } from "@/src/types/sanity-image";
 
 import HomeHeroSection from "./Home/HomeHeroSection";
+import HomeStatsSection from "./Home/HomeStatsSection";
 import HomeRoleSection from "./Home/HomeRoleSection";
 import NoMiddlemenSection from "./Home/NoMiddlemenSection";
+import ClientLogosSection from "./ClientLogosSection";
 import CaseStudiesSection from "./CaseStudiesSection";
+import FeatureGridSection from "./FeatureGridSection";
+import FaqSection from "./FaqSection";
+import VideoTestimonialsSection from "./VideoTestimonialsSection";
+import RoiCalculatorSection from "./RoiCalculatorSection";
 import CtaSection from "./CtaSection";
 import MediaContentSection from "./MediaContentSection";
 import ProductHeroSection from "./ProductsHeroSection";
@@ -156,17 +161,10 @@ type SectionComponentProps = {
   page?: string;
 };
 
-// Heavy client-component sections are code-split with next/dynamic so their JS
-// only ships on pages where the section is actually rendered — not in every
-// page's First Load JS. ssr stays true (default) → server HTML is unchanged, so
-// no SEO/LCP/CLS regression; only the client hydration chunk is deferred/removed.
-const HomeStatsSection = dynamic(() => import("./Home/HomeStatsSection")) as ComponentType<SectionComponentProps>;
-const ClientLogosSection = dynamic(() => import("./ClientLogosSection")) as ComponentType<SectionComponentProps>;
-const FeatureGridSection = dynamic(() => import("./FeatureGridSection")) as ComponentType<SectionComponentProps>;
-const FaqSection = dynamic(() => import("./FaqSection")) as ComponentType<SectionComponentProps>;
-const VideoTestimonialsSection = dynamic(() => import("./VideoTestimonialsSection")) as ComponentType<SectionComponentProps>;
-const RoiCalculatorSection = dynamic(() => import("./RoiCalculatorSection")) as ComponentType<SectionComponentProps>;
-
+// These were code-split with next/dynamic, but on Slow 4G the LCP is bound by how
+// long the whole page takes to download — and splitting duplicated shared code
+// across chunks, pushing total JS from 275KB to 464KB. Static imports keep the
+// bytes down, which is what actually moves LCP here.
 const sectionComponents: Record<string, ComponentType<SectionComponentProps>> = {
   homeHeroSection: HomeHeroSection,
   homeStatsSection: HomeStatsSection,

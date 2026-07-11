@@ -1,10 +1,5 @@
-import dynamic from 'next/dynamic'
+import PlatformDeepDiveClient from './PlatformDeepDiveClient'
 import type { PlatformTab } from './PlatformDeepDiveClient'
-
-// Code-split the client tab UI so it hydrates after the initial bundle instead
-// of adding to First Load JS. ssr stays true (default), so all tab content is
-// still in the server HTML (see comment below / PlatformDeepDiveClient).
-const PlatformDeepDiveClient = dynamic(() => import('./PlatformDeepDiveClient'))
 
 interface PlatformDeepDiveSectionProps {
   data?: {
