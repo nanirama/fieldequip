@@ -282,23 +282,28 @@ const FlexibleContent = async ({
       };
     }
 
-    // The first section is always above-the-fold (hero). Never wrap it in
-    // Suspense — a tiny fallback → full-viewport expansion causes CLS 0.2+.
-    if (index === 0) {
-      return <Section data={sectionData} page={page} key={index} />;
+    // The hero and the two sections nearest the fold render normally. They can
+    // sit inside the first viewport, so skipping their paint would make Speed
+    // Index (which scores how fast the visible area fills in) unstable.
+    if (index <= 2) {
+      if (index === 0) {
+        // Never wrap the hero in Suspense — a tiny fallback → full-viewport
+        // expansion causes CLS 0.2+.
+        return <Section data={sectionData} page={page} key={index} />;
+      }
+      return (
+        <Suspense fallback={<SectionFallbackLoader />} key={index}>
+          <Section data={sectionData} page={page} />
+        </Suspense>
+      );
     }
 
-    // Sections well below the hero get content-visibility:auto, so the browser
-    // skips style, layout and paint for them while they are off-screen. The markup
-    // stays in the HTML (crawlers still see it) but it costs nothing at first
-    // paint — which is what FCP, and with it the LCP element's render delay, was
-    // actually waiting on. contain-intrinsic-size reserves a plausible box so the
-    // scrollbar doesn't jump; `auto` makes the browser remember the real size once
-    // the section has rendered.
-    //
-    // Every section under the hero is skipped: the browser has to finish laying
-    // out the whole document before it can paint anything, so their layout cost
-    // is exactly what was holding the hero image back (render delay ~2.1s).
+    // Sections further down get content-visibility:auto, so the browser skips
+    // their style, layout and paint while they are off-screen. The markup stays
+    // in the HTML (crawlers still see it) but it costs nothing at first paint,
+    // which is what the hero image's render delay was waiting on.
+    // contain-intrinsic-size reserves a plausible box so the scrollbar doesn't
+    // jump; `auto` makes the browser remember the real size after first render.
     return (
       <div
         key={index}
