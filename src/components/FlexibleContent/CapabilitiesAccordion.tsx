@@ -7,12 +7,9 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type Ref,
 } from "react";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-
 
 type SanityImage = {
   asset?: { _ref?: string };
@@ -29,22 +26,18 @@ export type CapabilityItem = {
 const ptComponents: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="text-base leading-relaxed text-neutral-600">
-        {children}
-      </p>
+      <p className="text-base leading-relaxed text-neutral-600">{children}</p>
     ),
   },
   marks: {
     strong: ({ children }) => (
-      <strong className="text-2xl font-semibold text-[#020210]">
-        {children}
-      </strong>
+      <strong className="text-2xl font-semibold text-[#020210]">{children}</strong>
     ),
     em: ({ children }) => (
       <em className="italic text-neutral-700 dark:text-neutral-300">{children}</em>
     ),
     link: ({ children, value }) => {
-      const href: string = value?.href ?? ''
+      const href: string = value?.href ?? "";
       const newTab: boolean = value?.openInNewTab ?? true;
       return (
         <Link
@@ -59,142 +52,65 @@ const ptComponents: PortableTextComponents = {
   },
 };
 
-/** Long smooth ease-out */
-const easeOut = [0.16, 1, 0.3, 1] as const;
-/** Close: quick fade then collapse */
-const easeIn = [0.4, 0, 0.58, 1] as const;
-
-const panelVariantsSmooth: Variants = {
-  open: {
-    height: "auto",
-    opacity: 1,
-    transition: {
-      height: {
-        type: "spring",
-        bounce: 0,
-        stiffness: 200,
-        damping: 30,
-        mass: 0.9,
-      },
-      opacity: {
-        duration: 0.5,
-        ease: easeOut,
-        delay: 0.02,
-      },
-    },
-  },
-  collapsed: {
-    height: 0,
-    opacity: 0,
-    transition: {
-      opacity: {
-        duration: 0.22,
-        ease: easeIn,
-      },
-      height: {
-        type: "spring",
-        bounce: 0,
-        stiffness: 420,
-        damping: 36,
-        mass: 0.72,
-        delay: 0.08,
-      },
-    },
-  },
-};
-
-const panelVariantsReduced: Variants = {
-  open: {
-    height: "auto",
-    opacity: 1,
-    transition: { duration: 0.18 },
-  },
-  collapsed: {
-    height: 0,
-    opacity: 0,
-    transition: { duration: 0.15 },
-  },
-};
-
 function CapabilityAccordionItem({
   item,
   itemId,
-  itemIndex,
   isOpen,
   onSelect,
-  reduceMotion,
   listItemRef,
 }: {
   item: CapabilityItem;
   itemId: string;
-  itemIndex: number;
   isOpen: boolean;
   onSelect: () => void;
-  reduceMotion: boolean;
-  listItemRef?: Ref<HTMLLIElement>;
+  listItemRef?: (el: HTMLLIElement | null) => void;
 }) {
   const headerId = `${itemId}-header`;
   const panelId = `${itemId}-panel`;
   const hasBody = Boolean(item.description && item.description.length > 0);
-  const variants = reduceMotion ? panelVariantsReduced : panelVariantsSmooth;
 
   return (
-    <motion.li
-      ref={listItemRef}
-      className="py-2 sm:py-3 pl-5"
-      initial={false}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 32,
-        mass: 0.92,
-        delay: reduceMotion ? 0 : itemIndex * 0.05,
-      }}
-    >
+    <li ref={listItemRef} className="py-2 sm:py-3 pl-5">
       <h4 className="m-0">
-        <motion.button
+        <button
           type="button"
           id={headerId}
-          tabIndex={0}
-          className="w-full cursor-pointer text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#13A89E]"
+          className="w-full cursor-pointer text-left transition-transform duration-150 active:scale-[0.992] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#13A89E]"
           aria-expanded={isOpen}
           aria-controls={hasBody ? panelId : undefined}
           onClick={onSelect}
-          whileTap={reduceMotion ? undefined : { scale: 0.992 }}
-          transition={{ type: "spring", stiffness: 500, damping: 35 }}
         >
           <span
             className={`block text-2xl font-semibold ${
-              isOpen
-                ? "text-[#020210]"
-                : "text-neutral-800"
+              isOpen ? "text-[#020210]" : "text-neutral-800"
             }`}
           >
             {item.title}
           </span>
-        </motion.button>
+        </button>
       </h4>
-      <AnimatePresence initial={false} mode="sync">
-        {hasBody && (
-          <motion.div
-            key={`${itemId}-panel`}
-            id={panelId}
-            role="region"
-            aria-labelledby={headerId}
-            aria-hidden={!isOpen}
-            variants={variants}
-            initial="open"
-            animate={isOpen ? "open" : "collapsed"}
-            className="overflow-hidden"
-          >
+
+      {hasBody && (
+        // CSS grid trick: animating grid-template-rows between 0fr and 1fr gives a
+        // smooth height transition with no JS and no measuring — this is what
+        // framer-motion used to do here.
+        <div
+          id={panelId}
+          role="region"
+          aria-labelledby={headerId}
+          aria-hidden={!isOpen}
+          className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out motion-reduce:transition-none ${
+            isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="overflow-hidden">
             <div className="mt-3 text-base leading-relaxed text-[#020210]/70 dark:text-neutral-400">
               <PortableText value={item.description!} components={ptComponents} />
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.li>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -211,7 +127,6 @@ export default function CapabilitiesAccordion({ capabilities, activeIndex, onSel
     setInternalIndex(idx);
     onSelect?.(idx);
   };
-  const reduceMotion = useReducedMotion() ?? false;
   const listRef = useRef<HTMLUListElement>(null);
   const itemRefs = useRef<Map<number, HTMLLIElement>>(new Map());
   const [indicator, setIndicator] = useState({ top: 0, height: 0 });
@@ -220,13 +135,9 @@ export default function CapabilitiesAccordion({ capabilities, activeIndex, onSel
     const ul = listRef.current;
     const li = itemRefs.current.get(openIndex);
     if (!ul || !li) return;
-
     const ulRect = ul.getBoundingClientRect();
     const liRect = li.getBoundingClientRect();
-    setIndicator({
-      top: liRect.top - ulRect.top + ul.scrollTop,
-      height: liRect.height,
-    });
+    setIndicator({ top: liRect.top - ulRect.top + ul.scrollTop, height: liRect.height });
   }, [openIndex]);
 
   useLayoutEffect(() => {
@@ -236,26 +147,19 @@ export default function CapabilitiesAccordion({ capabilities, activeIndex, onSel
   useLayoutEffect(() => {
     const ul = listRef.current;
     if (!ul) return;
-
-    const scheduleUpdate = () => {
-      requestAnimationFrame(updateIndicator);
-    };
-
+    const scheduleUpdate = () => requestAnimationFrame(updateIndicator);
     const ro = new ResizeObserver(scheduleUpdate);
     ro.observe(ul);
-    itemRefs.current.forEach((li) => {
-      ro.observe(li);
-    });
-
+    itemRefs.current.forEach((li) => ro.observe(li));
     window.addEventListener("resize", scheduleUpdate);
-
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", scheduleUpdate);
     };
   }, [updateIndicator, openIndex, capabilities.length]);
 
-  /* Panel height animates over ~400ms; re-measure a few times so the teal track catches up */
+  // The panel height animates over ~500ms; re-measure a few times so the teal
+  // indicator track keeps up (matches the old behaviour).
   useEffect(() => {
     const delays = [0, 80, 200, 380, 550];
     const ids = delays.map((ms) => window.setTimeout(updateIndicator, ms));
@@ -275,30 +179,21 @@ export default function CapabilitiesAccordion({ capabilities, activeIndex, onSel
 
   return (
     <div className="relative">
-      {/* Single continuous track — full list height, including gaps */}
+      {/* Full-height base track */}
       <span
         className="pointer-events-none absolute inset-y-0 left-0 z-0 w-px bg-neutral-200 dark:bg-neutral-600"
         aria-hidden
       />
-      <motion.div
+      {/* Moving highlight — position/size set from measurements, animated in CSS
+          (no framer-motion). */}
+      <span
         aria-hidden
-        className="pointer-events-none absolute left-0 z-[1] w-[3px] bg-[#13A89E] dark:bg-[#75E8E0]"
-        initial={false}
-        animate={{
-          top: indicator.height > 0 ? indicator.top : 0,
+        className="pointer-events-none absolute left-0 z-[1] w-[3px] bg-[#13A89E] dark:bg-[#75E8E0] transition-[top,height,opacity] duration-300 ease-out motion-reduce:transition-none"
+        style={{
+          top: indicator.top,
           height: indicator.height,
           opacity: indicator.height > 0 ? 1 : 0,
         }}
-        transition={
-          reduceMotion
-            ? { duration: 0.2, ease: easeOut }
-            : {
-                type: "spring",
-                bounce: 0,
-                stiffness: 280,
-                damping: 34,
-              }
-        }
       />
       <ul
         ref={listRef}
@@ -310,10 +205,8 @@ export default function CapabilitiesAccordion({ capabilities, activeIndex, onSel
             key={cap._key || `cap-fallback-${idx}`}
             item={cap}
             itemId={`cap-${cap._key ?? idx}`}
-            itemIndex={idx}
             isOpen={openIndex === idx}
             onSelect={() => handleSelect(idx)}
-            reduceMotion={reduceMotion}
             listItemRef={setItemRef(idx)}
           />
         ))}
