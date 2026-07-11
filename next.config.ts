@@ -38,12 +38,8 @@ const nextConfig = withBundleAnalyzer({
     minimumCacheTTL: isDev ? 0 : 60 * 60 * 24,
   },
   experimental: {
-    // Inline the stylesheets into the HTML instead of shipping <link rel=stylesheet>.
-    // Those links were render-blocking, and PSI showed the LCP element's render
-    // delay tracking FCP exactly: FCP 2.0s -> ~2100ms delay, FCP 1.4s -> ~570ms.
-    // Removing the blocking round-trip is what lets the first paint happen early.
-    inlineCss: true,
-    // optimizeCss (critters) is Pages-Router only — a no-op here.
+    // optimizeCss (critical-CSS inlining) is a no-op under the Turbopack build,
+    // so the 3 stylesheets stay render-blocking. Left off deliberately.
     optimizeCss: false,
     dynamicIO: true,      // ← enables "use cache" directive
     useCache: true,       // ← enables cacheLife / cacheTag
