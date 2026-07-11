@@ -3,6 +3,11 @@
 // import { client } from "@/src/sanity/lib/client";
 // import { headerQuery } from "@/src/sanity/lib/queries";
 import HeaderClient from "./HeaderClient";
+import MenuDropdown from "./MenuDropdown";
+import ProductsMenuDesktop from "./ProductsMenuDesktop";
+import IndustriesMenuDesktop from "./IndustriesMenuDesktop";
+import CompanyMenuDesktop from "./CompanyMenuDesktop";
+import ResourcesMenuDesktop from "./ResourcesMenuDesktop";
 //import type { SettingsMenuData } from "./menu-types";
 
 // ── Layer 1: Remote Data Cache ────────────────────────────────────────────────
@@ -39,5 +44,45 @@ export interface HeaderProps {
 }
 
 export default async function Header({ layout, settings }: HeaderProps) {
-  return <HeaderClient layout={layout} settings={settings} />;
+  const s = settings ?? {};
+
+  // The mega-menu panels are built here, in the Server Component, and handed to
+  // HeaderClient as a prop. React renders them on the server only: their links and
+  // icons stay in the HTML (so crawlers still see the whole nav) but they never
+  // become part of the client hydration tree. Only MenuDropdown — the button and
+  // its open/close state — is a Client Component.
+  const desktopNav = (
+    <>
+      <MenuDropdown label="Products" layout={layout}>
+        <ProductsMenuDesktop
+          menuTitle={s.productsTitle}
+          menuDescription={s.productsDescription}
+          items={s.productNav}
+        />
+      </MenuDropdown>
+      <MenuDropdown label="Industries" layout={layout}>
+        <IndustriesMenuDesktop
+          menuTitle={s.industriesTitle}
+          menuDescription={s.industriesDescription}
+          industries={s.industriesNav ?? []}
+        />
+      </MenuDropdown>
+      <MenuDropdown label="Company" layout={layout}>
+        <CompanyMenuDesktop
+          menuTitle={s.companyTitle}
+          menuDescription={s.companyDescription}
+          items={s.companyNav}
+        />
+      </MenuDropdown>
+      <MenuDropdown label="Resources" layout={layout}>
+        <ResourcesMenuDesktop
+          menuTitle={s.resourcesTitle}
+          menuDescription={s.resourcesDescription}
+          items={s.resourcesNav}
+        />
+      </MenuDropdown>
+    </>
+  );
+
+  return <HeaderClient layout={layout} settings={settings} desktopNav={desktopNav} />;
 }
