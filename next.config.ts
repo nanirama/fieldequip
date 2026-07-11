@@ -34,6 +34,8 @@ const nextConfig = withBundleAnalyzer({
     minimumCacheTTL: isDev ? 0 : 60 * 60 * 24,
   },
   experimental: {
+    // optimizeCss (critical-CSS inlining) is a no-op under the Turbopack build,
+    // so the 3 stylesheets stay render-blocking. Left off deliberately.
     optimizeCss: false,
     dynamicIO: true,      // ← enables "use cache" directive
     useCache: true,       // ← enables cacheLife / cacheTag
