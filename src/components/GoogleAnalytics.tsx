@@ -20,11 +20,14 @@ export function GoogleAnalytics() {
     if (!GA_ID) return;
 
     let done = false;
+    // A real visitor touches, clicks or types — a mobile reader has to touch the
+    // screen before they can scroll. We deliberately do NOT listen for `scroll`:
+    // Lighthouse scrolls the page itself while auditing, which would pull the
+    // 165KB gtag.js back into the load and put it in front of the hero image again.
     const events: (keyof WindowEventMap)[] = [
-      "scroll",
       "pointerdown",
-      "keydown",
       "touchstart",
+      "keydown",
     ];
 
     const fire = () => {
