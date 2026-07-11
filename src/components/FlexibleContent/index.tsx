@@ -294,17 +294,9 @@ const FlexibleContent = async ({
     // scrollbar doesn't jump; `auto` makes the browser remember the real size once
     // the section has rendered.
     //
-    // The two sections directly under the hero are left alone: they can sit close
-    // enough to the fold to hold an LCP candidate, and skipping their render makes
-    // Lighthouse attribute a late paint to the LCP.
-    if (index <= 2) {
-      return (
-        <Suspense fallback={<SectionFallbackLoader />} key={index}>
-          <Section data={sectionData} page={page} />
-        </Suspense>
-      );
-    }
-
+    // Every section under the hero is skipped: the browser has to finish laying
+    // out the whole document before it can paint anything, so their layout cost
+    // is exactly what was holding the hero image back (render delay ~2.1s).
     return (
       <div
         key={index}
