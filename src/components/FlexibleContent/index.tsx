@@ -7,10 +7,12 @@ import HomeStatsSection from "./Home/HomeStatsSection";
 import HomeRoleSection from "./Home/HomeRoleSection";
 import NoMiddlemenSection from "./Home/NoMiddlemenSection";
 import ClientLogosSection from "./ClientLogosSection";
-import CaseStudiesSection from "./CaseStudiesSection";
+// The two react-slick carousels are mounted on scroll (see the *Lazy wrappers),
+// so slick's script + init doesn't run during the LCP window.
+import CaseStudiesSection from "./CaseStudiesSectionLazy";
 import FeatureGridSection from "./FeatureGridSection";
 import FaqSection from "./FaqSection";
-import VideoTestimonialsSection from "./VideoTestimonialsSection";
+import VideoTestimonialsSection from "./VideoTestimonialsSectionLazy";
 import RoiCalculatorSection from "./RoiCalculatorSection";
 import CtaSection from "./CtaSection";
 import MediaContentSection from "./MediaContentSection";
