@@ -33,8 +33,18 @@ function HamburgerIcon({ open }: { open: boolean }) {
 
 function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  // The mobile menu items are only mounted once the drawer is first opened, so
+  // their (duplicate of the desktop nav) DOM doesn't get server-rendered and
+  // hydrated on every initial page load. The desktop <nav> keeps all nav links
+  // in the initial HTML for crawlers. JS stays bundled, so opening is instant.
+  const [mobileMenuMounted, setMobileMenuMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const isDark = layout === "dark";
+
+  const openMobile = useCallback(() => {
+    setMobileMenuMounted(true);
+    setMobileOpen((v) => !v);
+  }, []);
 
   // Scroll lock: overflow:hidden on html+body freezes scroll without any layout
   // shift, position change, or window.scrollTo — avoiding two known bugs:
@@ -173,7 +183,7 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
               aria-controls="mobile-menu"
               aria-expanded={mobileOpen}
               aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
-              onClick={() => setMobileOpen((v) => !v)}
+              onClick={openMobile}
               className={[
                 "flex h-9 w-9 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 lg:hidden touch-manipulation",
                 isDark ? "text-white hover:bg-white/10" : "text-slate-800 hover:bg-slate-100",
@@ -229,36 +239,38 @@ function HeaderClientComponent({ layout = "light", settings }: HeaderClientProps
 
         <nav aria-label="Mobile navigation" className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
           <div className="flex min-h-full items-center justify-center">
-            <ul className="flex w-full max-w-md flex-col gap-1">
-              <li>
-                <ProductsMenuMobile
-                  menuTitle={settings.productsTitle}
-                  menuDescription={settings.productsDescription}
-                  items={settings.productNav}
-                />
-              </li>
-              <li>
-                <IndustriesMenuMobile
-                  menuTitle={settings.industriesTitle}
-                  menuDescription={settings.industriesDescription}
-                  industries={settings.industriesNav ?? []}
-                />
-              </li>
-              <li>
-                <CompanyMenuMobile
-                  menuTitle={settings.companyTitle}
-                  menuDescription={settings.companyDescription}
-                  items={settings.companyNav}
-                />
-              </li>
-              <li>
-                <ResourcesMenuMobile
-                  menuTitle={settings.resourcesTitle}
-                  menuDescription={settings.resourcesDescription}
-                  items={settings.resourcesNav}
-                />
-              </li>
-            </ul>
+            {mobileMenuMounted && (
+              <ul className="flex w-full max-w-md flex-col gap-1">
+                <li>
+                  <ProductsMenuMobile
+                    menuTitle={settings.productsTitle}
+                    menuDescription={settings.productsDescription}
+                    items={settings.productNav}
+                  />
+                </li>
+                <li>
+                  <IndustriesMenuMobile
+                    menuTitle={settings.industriesTitle}
+                    menuDescription={settings.industriesDescription}
+                    industries={settings.industriesNav ?? []}
+                  />
+                </li>
+                <li>
+                  <CompanyMenuMobile
+                    menuTitle={settings.companyTitle}
+                    menuDescription={settings.companyDescription}
+                    items={settings.companyNav}
+                  />
+                </li>
+                <li>
+                  <ResourcesMenuMobile
+                    menuTitle={settings.resourcesTitle}
+                    menuDescription={settings.resourcesDescription}
+                    items={settings.resourcesNav}
+                  />
+                </li>
+              </ul>
+            )}
           </div>
         </nav>
 

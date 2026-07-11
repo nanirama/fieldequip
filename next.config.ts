@@ -37,6 +37,12 @@ const nextConfig = withBundleAnalyzer({
     optimizeCss: false,
     dynamicIO: true,      // ← enables "use cache" directive
     useCache: true,       // ← enables cacheLife / cacheTag
+    // Tree-shake barrel imports so only the used exports ship to the client.
+    optimizePackageImports: [
+      "@portabletext/react",
+      "@sanity/image-url",
+      "next-sanity",
+    ],
   },
   compress: true,
   poweredByHeader: false,
