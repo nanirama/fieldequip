@@ -36,6 +36,34 @@ export function sameOriginImage(url: string): string {
   return url.replace('https://cdn.sanity.io/images/', '/sanity-cdn/')
 }
 
+// Fetches an image at build/render time and returns it as a base64 data URI, so
+// it can be inlined straight into the HTML. Worth it for exactly one image per
+// page: the mobile hero (the LCP element). Even served from our own origin it is
+// still a separate request that can't start until the browser has parsed the
+// HTML, and on a throttled connection that round trip is most of the LCP. Inlined,
+// the image arrives inside the document itself and paints with the first frame —
+// no request, so LCP collapses toward FCP.
+//
+// The cost is that the ~17 KB image rides in the HTML (so ~23 KB of base64 is
+// added to the document and isn't cached separately across pages), which is why
+// this is reserved for the single most important image. `url` must be the real
+// cdn.sanity.io URL — the fetch runs on the server, so the /sanity-cdn rewrite
+// (which only exists in the browser) doesn't apply. Any failure returns null and
+// the caller falls back to the normal <img src>.
+export async function inlineImageDataUri(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { cache: 'force-cache' })
+    if (!res.ok) return null
+    const bytes = Buffer.from(await res.arrayBuffer())
+    // Guard against inlining something unexpectedly large into every page load.
+    if (bytes.byteLength > 60 * 1024) return null
+    const type = res.headers.get('content-type') || 'image/webp'
+    return `data:${type};base64,${bytes.toString('base64')}`
+  } catch {
+    return null
+  }
+}
+
 export function resolveHref(
   documentType?: string,
   slug?: string,
