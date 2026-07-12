@@ -3,7 +3,7 @@ import { preload } from "react-dom";
 import { PortableText, PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
 import { ButtonComponent } from "../ButtonComponent";
-import { urlForImage } from "@/src/sanity/lib/utils";
+import { urlForImage, sameOriginImage } from "@/src/sanity/lib/utils";
 import { FeaturesHeroDecorations } from "./FeaturesHeroDecorations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -157,22 +157,24 @@ export default function FeaturesHeroSection({ data, page }: Props) {
   // fetch share the same browser cache entry. auto("format") triggers Vary: Accept
   // on Sanity's CDN; preload scanner and <img> can differ on AVIF support, causing
   // a cache miss that downloads the image twice.
-  const imageUrl =
+  const imageUrl = sameOriginImage(
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
         ?.fit("max")
         ?.format("webp")
         ?.quality(75)
-        ?.url()) || "/images/hero-image.png";
+        ?.url()) || "/images/hero-image.png"
+  );
 
-  const imageUrlMobile =
+  const imageUrlMobile = sameOriginImage(
     urlForImage(image)
       ?.width(imageWidthMobile)
       ?.fit("max")
       ?.format("webp")
       ?.quality(75)
-      ?.url() ?? imageUrl;
+      ?.url() ?? imageUrl
+  );
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { preload } from "react-dom";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-import { urlForImage } from "@/src/sanity/lib/utils";
+import { urlForImage, sameOriginImage } from "@/src/sanity/lib/utils";
 import { ProductHeroDecorations } from "./ProductHeroDecorations";
 import { ButtonComponent } from "../ButtonComponent";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -14,16 +14,6 @@ interface Button {
 
 function isValidHref(url: unknown): url is string {
   return typeof url === "string" && url.trim().length > 0;
-}
-
-// Route the hero image through our own origin (see the rewrite in next.config).
-// cdn.sanity.io is a second origin, so the browser had to do DNS + TCP + TLS
-// before it could even ask for the image — roughly 700 ms of the LCP on a
-// throttled mobile connection. The document's connection is already open, so the
-// same bytes arrive over it with no handshake at all. Sanity still renders the
-// image; only the hostname the browser talks to changes.
-function sameOrigin(url: string): string {
-  return url.replace("https://cdn.sanity.io/images/", "/sanity-cdn/");
 }
 
 /** Matches Sanity image shape for `urlForImage` */
@@ -120,7 +110,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   // of their Accept headers. auto("format") appends ?auto=format which triggers
   // Vary: Accept on Sanity's CDN — the preload scanner and the <img> fetch can
   // send different Accept headers (AVIF vs WebP), producing a cache miss.
-  const imageUrl = sameOrigin(
+  const imageUrl = sameOriginImage(
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
@@ -130,7 +120,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
         ?.url()) || "/images/hero-image.png"
   );
 
-  const imageUrlMobile = sameOrigin(
+  const imageUrlMobile = sameOriginImage(
     urlForImage(image)
       ?.width(imageWidthMobile)
       ?.height(imageHeightMobile)

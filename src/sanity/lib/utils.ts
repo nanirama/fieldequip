@@ -21,6 +21,21 @@ export function urlForOpenGraphImage(image: SanityImage | undefined) {
   return urlForImage(image)?.width(1200).height(627).fit('crop').url()
 }
 
+// Serves a Sanity image from our own origin, via the /sanity-cdn rewrite in
+// next.config. Worth doing for the hero image on a page and nothing else:
+// cdn.sanity.io is a second origin, so the browser pays a DNS lookup, a TCP
+// connect and a TLS handshake before it can even ask for the file — around
+// 700 ms on a throttled mobile connection, which lands squarely on LCP. The
+// connection the document arrived on is already open, so the same bytes come
+// down it with no handshake. Sanity still resizes the image; only the hostname
+// the browser talks to changes.
+//
+// Images below the fold don't need this — by the time they're requested the
+// handshake has long since happened.
+export function sameOriginImage(url: string): string {
+  return url.replace('https://cdn.sanity.io/images/', '/sanity-cdn/')
+}
+
 export function resolveHref(
   documentType?: string,
   slug?: string,
