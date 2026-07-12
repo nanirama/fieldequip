@@ -231,6 +231,7 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
                   className="w-full h-auto block"
                   fetchPriority="high"
                   loading="eager"
+                  decoding="sync"
                   draggable={false}
                 />
               </picture>

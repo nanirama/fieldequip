@@ -257,6 +257,7 @@ export default function FeaturesHeroSection({ data, page }: Props) {
                     className="h-auto w-full object-cover object-top"
                     fetchPriority="high"
                     loading="eager"
+                    decoding="sync"
                     draggable={false}
                   />
                 </picture>
