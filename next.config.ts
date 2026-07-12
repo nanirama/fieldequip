@@ -18,6 +18,24 @@ const nextConfig = withBundleAnalyzer({
     return redirectsList;
   },
 
+  // The hero image is the LCP element, and it was the only thing on the critical
+  // path served from cdn.sanity.io. Being a second origin, it cost a DNS lookup,
+  // a TCP connect and a TLS handshake before a single byte moved — about 700 ms
+  // on a throttled mobile connection, for a 17 KB file. Everything else on the
+  // page rides the connection the document already opened.
+  //
+  // Serving it from our own path puts it on that same connection. Sanity still
+  // does the resizing (the query string is passed straight through) and sends a
+  // one-year Cache-Control, so the CDN caches the response like any other asset.
+  async rewrites() {
+    return [
+      {
+        source: "/sanity-cdn/:path*",
+        destination: "https://cdn.sanity.io/images/:path*",
+      },
+    ];
+  },
+
   images: {
     formats: ["image/avif", "image/webp"],
     // Every entry here becomes another (long) Sanity URL inside each <img srcset>.

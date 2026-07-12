@@ -16,6 +16,16 @@ function isValidHref(url: unknown): url is string {
   return typeof url === "string" && url.trim().length > 0;
 }
 
+// Route the hero image through our own origin (see the rewrite in next.config).
+// cdn.sanity.io is a second origin, so the browser had to do DNS + TCP + TLS
+// before it could even ask for the image — roughly 700 ms of the LCP on a
+// throttled mobile connection. The document's connection is already open, so the
+// same bytes arrive over it with no handshake at all. Sanity still renders the
+// image; only the hostname the browser talks to changes.
+function sameOrigin(url: string): string {
+  return url.replace("https://cdn.sanity.io/images/", "/sanity-cdn/");
+}
+
 /** Matches Sanity image shape for `urlForImage` */
 type ProductHeroImage = {
   asset?: { _ref?: string };
@@ -110,23 +120,25 @@ export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   // of their Accept headers. auto("format") appends ?auto=format which triggers
   // Vary: Accept on Sanity's CDN — the preload scanner and the <img> fetch can
   // send different Accept headers (AVIF vs WebP), producing a cache miss.
-  const imageUrl =
+  const imageUrl = sameOrigin(
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
         ?.fit("max")
         ?.format("webp")
         ?.quality(75)
-        ?.url()) || "/images/hero-image.png";
+        ?.url()) || "/images/hero-image.png"
+  );
 
-  const imageUrlMobile =
+  const imageUrlMobile = sameOrigin(
     urlForImage(image)
       ?.width(imageWidthMobile)
       ?.height(imageHeightMobile)
       ?.fit("max")
       ?.format("webp")
       ?.quality(40)
-      ?.url() ?? imageUrl;
+      ?.url() ?? imageUrl
+  );
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)
