@@ -335,6 +335,9 @@ input[type="range"]::-moz-range-thumb {
 .fe-marquee {
   animation: fe-marquee 40s linear infinite;
 }
+/* The old react-slick ticker scrolled regardless of the OS "reduce motion"
+   setting, so keep it moving here too — turning it off entirely made the logos
+   look frozen. Slow it right down instead, which is what the setting is for. */
 @media (prefers-reduced-motion: reduce) {
-  .fe-marquee { animation: none; }
+  .fe-marquee { animation-duration: 120s; }
 }
