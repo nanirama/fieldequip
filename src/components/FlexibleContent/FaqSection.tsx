@@ -1,7 +1,11 @@
 // components/sections/FaqSection.tsx
-'use client'
+//
+// Server Component. This used to be a client component whose only job was an
+// accordion (one panel open at a time). Native <details name="..."> does exactly
+// that with zero JavaScript, so the section no longer hydrates at all — its markup
+// still ships in the HTML, so the answers stay indexable and keep matching the
+// FAQPage structured data emitted by FaqSchema.
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { PortableText, type PortableTextComponents } from '@portabletext/react'
 import type { PortableTextBlock } from '@portabletext/types'
@@ -69,58 +73,36 @@ const answerComponents: PortableTextComponents = {
 
 // ─── FAQ Item ─────────────────────────────────────────────────────────────────
 
-function FaqItem({
-  faq,
-  isOpen,
-  onToggle,
-}: {
-  faq: Faq
-  isOpen: boolean
-  onToggle: () => void
-}) {
+function FaqItem({ faq, defaultOpen }: { faq: Faq; defaultOpen: boolean }) {
   return (
-    <div
-      className={`rounded-[8px] transition-colors duration-200 ${isOpen
-          ? 'border-none bg-white/5'
-          : 'border-none bg-white/5'
-        }`}
+    <details
+      // Same `name` on every item = exclusive accordion: opening one closes the
+      // other, exactly like the old openId state did. Clicking an open one still
+      // closes it.
+      name="faq"
+      open={defaultOpen}
+      className="fe-faq group rounded-[8px] bg-white/5"
     >
-      <button
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500"
-      >
-        <span
-          className={`text-sm font-normal leading-[140%] transition-colors sm:text-base ${isOpen ? 'text-white' : 'text-slate-200'
-            }`}
-        >
+      <summary className="flex w-full cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-teal-500 [&::-webkit-details-marker]:hidden">
+        <span className="text-sm font-normal leading-[140%] text-slate-200 transition-colors group-open:text-white sm:text-base">
           {faq.question}
         </span>
         <span
           aria-hidden="true"
-          className={`shrink-0 rounded-md p-1 transition-all duration-300 ${isOpen ? 'text-teal-400' : 'text-slate-500'
-            } ${isOpen ? 'rotate-180' : ''}`}
+          className="shrink-0 rounded-md p-1 text-slate-500 transition-all duration-300 group-open:rotate-180 group-open:text-teal-400"
         >
           <svg width="16" height="9" viewBox="0 0 16 9" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M0.75 0.750113L6.9954 6.99521C7.12076 7.12057 7.26958 7.22002 7.43337 7.28786C7.59716 7.35571 7.77271 7.39062 7.95 7.39062C8.12728 7.39062 8.30283 7.35571 8.46663 7.28786C8.63042 7.22002 8.77924 7.12057 8.9046 6.99521L15.15 0.749813" stroke="#13A89E" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-      </button>
+      </summary>
 
-      {/* Animated answer */}
-      <div
-        className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-          }`}
-      >
-        <div className="overflow-hidden">
-          <div className="px-5 pb-5 pt-1">
-            {faq.answer?.length ? (
-              <PortableText value={faq.answer} components={answerComponents} />
-            ) : null}
-          </div>
-        </div>
+      <div className="px-5 pb-5 pt-1">
+        {faq.answer?.length ? (
+          <PortableText value={faq.answer} components={answerComponents} />
+        ) : null}
       </div>
-    </div>
+    </details>
   )
 }
 
@@ -129,9 +111,6 @@ function FaqItem({
 export default function FaqSection({ data }: FaqSectionProps) {
   const heading = data?.heading ?? 'Frequently asked questions'
   const faqs = (data?.faqs ?? []).filter((f) => f?._id && f?.question)
-  const [openId, setOpenId] = useState<string | null>(() => faqs[0]?._id ?? null)
-
-  const toggle = (id: string) => setOpenId((prev) => (prev === id ? null : id))
 
   if (!faqs.length) {
     return null
@@ -141,6 +120,7 @@ export default function FaqSection({ data }: FaqSectionProps) {
   const mid = Math.ceil(faqs.length / 2)
   const leftFaqs = faqs.slice(0, mid)
   const rightFaqs = faqs.slice(mid)
+  const firstId = faqs[0]?._id
 
   return (
     <section className="bg-brand md:pt-24 pt-10 pb-10 text-white">
@@ -157,24 +137,14 @@ export default function FaqSection({ data }: FaqSectionProps) {
           {/* Left column */}
           <div className="flex flex-col gap-3">
             {leftFaqs.map((faq) => (
-              <FaqItem
-                key={faq._id}
-                faq={faq}
-                isOpen={openId === faq._id}
-                onToggle={() => toggle(faq._id)}
-              />
+              <FaqItem key={faq._id} faq={faq} defaultOpen={faq._id === firstId} />
             ))}
           </div>
 
           {/* Right column */}
           <div className="flex flex-col gap-3">
             {rightFaqs.map((faq) => (
-              <FaqItem
-                key={faq._id}
-                faq={faq}
-                isOpen={openId === faq._id}
-                onToggle={() => toggle(faq._id)}
-              />
+              <FaqItem key={faq._id} faq={faq} defaultOpen={faq._id === firstId} />
             ))}
           </div>
 

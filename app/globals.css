@@ -341,3 +341,16 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .fe-marquee { animation-duration: 120s; }
 }
+
+/* FAQ accordion (native <details>, no JS). Animate the open/close where the
+   browser supports it; elsewhere it just opens instantly, which is fine. */
+@supports (interpolate-size: allow-keywords) {
+  :root { interpolate-size: allow-keywords; }
+  details.fe-faq::details-content {
+    height: 0;
+    overflow: hidden;
+    transition: height 300ms ease, content-visibility 300ms;
+    transition-behavior: allow-discrete;
+  }
+  details.fe-faq[open]::details-content { height: auto; }
+}
