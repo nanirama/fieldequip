@@ -2,7 +2,7 @@ import Link from "next/link";
 import { preload } from "react-dom";
 import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import type { PortableTextBlock } from "@portabletext/types";
-import { urlForImage, sameOriginImage, inlineImageDataUri } from "@/src/sanity/lib/utils";
+import { urlForImage, sameOriginImage } from "@/src/sanity/lib/utils";
 import { ProductHeroDecorations } from "./ProductHeroDecorations";
 import { ButtonComponent } from "../ButtonComponent";
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ function WrenchIcon({ className }: { className?: string }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default async function ProductHeroSection({ data }: ProductHeroSectionProps) {
+export default function ProductHeroSection({ data }: ProductHeroSectionProps) {
   const badge = data?.badge;
   const heading = data?.heading ?? "";
   const description = data?.description;
@@ -110,35 +110,25 @@ export default async function ProductHeroSection({ data }: ProductHeroSectionPro
   // of their Accept headers. auto("format") appends ?auto=format which triggers
   // Vary: Accept on Sanity's CDN — the preload scanner and the <img> fetch can
   // send different Accept headers (AVIF vs WebP), producing a cache miss.
-  const rawImageUrl =
+  const imageUrl = sameOriginImage(
     (image &&
       urlForImage(image)
         ?.width(imageWidthDesktop)
         ?.fit("max")
         ?.format("webp")
         ?.quality(75)
-        ?.url()) || "/images/hero-image.png";
+        ?.url()) || "/images/hero-image.png"
+  );
 
-  const rawImageUrlMobile =
+  const imageUrlMobile = sameOriginImage(
     urlForImage(image)
       ?.width(imageWidthMobile)
       ?.height(imageHeightMobile)
       ?.fit("max")
       ?.format("webp")
       ?.quality(40)
-      ?.url() ?? rawImageUrl;
-
-  const imageUrl = sameOriginImage(rawImageUrl);
-
-  // Inline the mobile hero (the LCP element) as a data URI so it paints with the
-  // HTML instead of costing a separate request. Desktop keeps the normal URL —
-  // its image is larger and desktop LCP is already comfortable, so there's no
-  // reason to inflate the HTML for it. Falls back to the same-origin URL if the
-  // build-time fetch fails.
-  const inlinedMobile = rawImageUrlMobile.startsWith("https://cdn.sanity.io/")
-    ? await inlineImageDataUri(rawImageUrlMobile)
-    : null;
-  const imageUrlMobile = inlinedMobile ?? sameOriginImage(rawImageUrlMobile);
+      ?.url() ?? imageUrl
+  );
 
   const primaryHref = isValidHref(primaryButton?.url) ? primaryButton.url.trim() : "";
   const secondaryHref = isValidHref(secondaryButton?.url)
@@ -153,11 +143,7 @@ export default async function ProductHeroSection({ data }: ProductHeroSectionPro
 
   // type: "image/webp" lets the browser skip the preload on the rare browser
   // that doesn't support WebP (it would skip the <source> too, so no wasted fetch).
-  // When the mobile hero is inlined there's nothing to preload — it's already in
-  // the HTML — so only the desktop image gets a preload hint.
-  if (!inlinedMobile) {
-    preload(imageUrlMobile, { as: "image", fetchPriority: "high", type: "image/webp", media: "(max-width: 639px)", imageSizes: "100vw" });
-  }
+  preload(imageUrlMobile, { as: "image", fetchPriority: "high", type: "image/webp", media: "(max-width: 639px)", imageSizes: "100vw" });
   preload(imageUrl, { as: "image", fetchPriority: "high", type: "image/webp", media: "(min-width: 640px)" });
 
   return (
@@ -235,10 +221,8 @@ export default async function ProductHeroSection({ data }: ProductHeroSectionPro
         {/* Image: 50% column */}
         <div className="order-2 flex w-full min-w-0 items-center justify-center px-4 sm:px-6 lg:flex-[0_0_50%] lg:justify-end lg:pl-6 lg:pr-0">
           <figure className="z-20 w-full max-w-lg sm:max-w-2xl lg:max-w-none">
-              {/* The mobile image is the <img src> itself, so when it's an inlined
-                  data URI it appears in the markup exactly once. Only desktop needs a
-                  <source> to swap in the larger network image above 640px. */}
               <picture>
+                <source media="(max-width: 639px)" srcSet={imageUrlMobile} type="image/webp" sizes="100vw" />
                 <source media="(min-width: 640px)" srcSet={imageUrl} type="image/webp" />
 
                 <img
